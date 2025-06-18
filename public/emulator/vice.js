@@ -67,8 +67,77 @@ const config = {
   },
   onProgress: function(progress) {
     console.log('Loading progress:', progress);
+  },
+  onStart: function() {
+    console.log('Emulator started!');
+    window.dispatchEvent(new CustomEvent('emulatorStart'));
+  },
+  onLoadError: function(error) {
+    console.error('Emulator load error:', error);
+    window.dispatchEvent(new CustomEvent('emulatorError', { detail: { error } }));
+  },
+  onError: function(error) {
+    console.error('Emulator error:', error);
+    window.dispatchEvent(new CustomEvent('emulatorError', { detail: { error } }));
+  },
+  onLoad: function() {
+    console.log('Emulator loaded successfully');
+  },
+  onProgress: function(progress) {
+    console.log('Loading progress:', progress);
+  },
+  EJS_onGameStart: function() {
+    console.log('Game started!');
+    window.dispatchEvent(new CustomEvent('gameStart'));
+  },
+  EJS_onLoadError: function(error) {
+    console.error('Game load error:', error);
+    window.dispatchEvent(new CustomEvent('emulatorError', { detail: { error } }));
+  },
+  EJS_onError: function(error) {
+    console.error('Game error:', error);
+    try {
+      // If WebGL fails, try falling back to canvas
+      if (error && error.toString().includes('WebGL') && !config.EJS_forceCanvas) {
+        console.log('WebGL error detected, attempting canvas fallback...');
+        config.EJS_forceCanvas = true;
+        config.EJS_useWebGL = false;
+        window.EJS_forceCanvas = true;
+        window.EJS_useWebGL = false;
+        
+        // Reload the emulator with canvas fallback
+        setTimeout(() => {
+          if (window.EJS_emulator) {
+            window.EJS_emulator.startGame();
+          }
+        }, 1000);
+        return;
+      }
+      window.dispatchEvent(new CustomEvent('emulatorError', { detail: { error } }));
+    } catch (fallbackError) {
+      console.error('Error in error handler:', fallbackError);
+      window.dispatchEvent(new CustomEvent('emulatorError', { 
+        detail: { 
+          error: 'Failed to start game: ' + (error?.message || error || 'Unknown error') 
+        } 
+      }));
+    }
+  },
+  EJS_onLoad: function() {
+    console.log('Game loaded successfully');
   }
 };
+
+// Set global config for backward compatibility
+window.EJS_player = config.player;
+window.EJS_core = config.core;
+window.EJS_gameName = config.EJS_gameName;
+window.EJS_gameUrl = config.game.path;
+window.EJS_pathtodata = config.dataPath;
+window.EJS_useWebGL = config.EJS_useWebGL;
+window.EJS_lightgun = config.EJS_lightgun;
+window.EJS_volume = config.EJS_volume;
+window.EJS_buttons = config.EJS_buttons;
 
 // Debug info
 console.log('Emulator config:', config);

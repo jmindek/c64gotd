@@ -4,6 +4,27 @@ import { useRef, useState, useEffect, useCallback, useMemo } from 'react';
 import { JoystickDirection } from '@/components/Joystick/Joystick';
 import dynamic from 'next/dynamic';
 
+declare global {
+  interface Window {
+    EJS_emulator: any;
+    EJS_player: string;
+    EJS_core: string;
+    EJS_coreModule?: string;
+    EJS_gameName: string;
+    EJS_gameUrl: string;
+    EJS_pathtodata: string;
+    EJS_lightgun?: boolean;
+    EJS_useWebGL?: boolean;
+    EJS_useWasm?: boolean;
+    EJS_wasmPath?: string;
+    EJS_wasmBinaryFile?: string;
+    EJS_wasmMemory?: WebAssembly.Memory;
+    EJS_wasmBinary?: ArrayBuffer;
+    EJS_volume?: number;
+    EJS_buttons?: Record<string, unknown>;
+  }
+}
+
 // Dynamically import the Joystick component with SSR disabled
 const Joystick = dynamic(
   () => import('@/components/Joystick/Joystick'),
@@ -93,27 +114,91 @@ export default function Home() {
 
   // Start the game
   const handleStartGame = useCallback(() => {
+    console.log('Start button clicked');
     setIsLoading(true);
     setError(null);
-    setIsGameStarted(false);
-
-    // Simulate loading progress
-    let progress = 0;
-    const interval = setInterval(() => {
-      progress += 10;
-      setLoadingProgress(progress);
-      if (progress >= 100) {
-        clearInterval(interval);
-        // Load the emulator loader script and start the game
-        loadScript('/emulator/vice.js', () => {
-          // The emulator will handle setting isGameStarted via events
-          // or we'll get an error event if something goes wrong
+    
+    // Hide the preview immediately
+    console.log('Hiding preview');
+    setIsGameStarted(true);
+    
+    // Create or get the emulator container
+    let container = document.getElementById('emulator-container');
+    if (!container) {
+      console.log('Creating new emulator container');
+      container = document.createElement('div');
+      container.id = 'emulator-container';
+      container.className = 'absolute inset-0 w-full h-full';
+      document.getElementById('game-area')?.appendChild(container);
+    }
+    
+    // Set emulator configuration
+    console.log('Setting up emulator with config:', {
+      player: '#emulator-container',
+      core: 'vice',
+      gameName: 'Blockheads',
+      gameUrl: '/games/Blockheads.d64',
+      pathtodata: 'https://www.emulatorjs.com/stable/data/'
+    });
+    
+    window.EJS_player = '#emulator-container';
+    window.EJS_core = 'vice_x64sc';
+    window.EJS_coreModule = 'vice_x64sc-thread-wasm';
+    window.EJS_gameName = 'Blockheads';
+    window.EJS_gameUrl = '/games/Blockheads.d64';
+    window.EJS_lightgun = false;
+    window.EJS_useWebGL = true;
+    window.EJS_volume = 1.0;
+    window.EJS_buttons = {};
+    window.EJS_useWasm = true;
+    window.EJS_wasmPath = 'cores/vice_x64sc-thread-wasm.js';
+    window.EJS_wasmBinaryFile = 'cores/vice_x64sc-thread-wasm.wasm';
+    window.EJS_wasmMemory = undefined; // Let the browser handle memory allocation
+    window.EJS_wasmBinary = undefined; // Let the browser handle binary loading
+    // Set the correct base URL for EmulatorJS
+    const emulatorBaseUrl = 'https://cdn.emulatorjs.org/stable/data/';
+    window.EJS_pathtodata = emulatorBaseUrl;
+    
+    console.log('Loading emulator from:', emulatorBaseUrl);
+    
+    // Check if script is already loaded
+    if (!window.EJS_emulator) {
+      console.log('Loading emulator script...');
+      const script = document.createElement('script');
+      script.src = `${emulatorBaseUrl}loader.js`;
+      script.async = true;
+      script.onload = () => {
+        console.log('Emulator script loaded successfully');
+        setIsLoading(false);
+      };
+      script.onerror = (error) => {
+        console.error('Failed to load emulator script:', {
+          error,
+          url: script.src,
+          readyState: script.readyState
         });
-      }
-    }, 100);
-
-    // Clean up interval if component unmounts
-    return () => clearInterval(interval);
+        setError('Failed to load the emulator. Please check your connection and try again.');
+        setIsLoading(false);
+        setIsGameStarted(false);
+      };
+      
+      // Add some debug info
+      script.onloadstart = () => console.log('Starting to load emulator script...');
+      script.onprogress = (e) => console.log('Loading emulator script...', e);
+      
+      document.body.appendChild(script);
+    } else {
+      console.log('Emulator already loaded');
+      setIsLoading(false);
+    }
+    
+    // Add a small delay to check if the emulator initialized
+    setTimeout(() => {
+      console.log('Checking emulator state:', { 
+        EJS_emulator: window.EJS_emulator,
+        container: document.getElementById('emulator-container')?.innerHTML 
+      });
+    }, 1000);
   }, []);
 
   return (
@@ -131,17 +216,46 @@ export default function Home() {
           className="relative w-full aspect-[4/3] min-h-[600px] min-w-[800px] bg-black/50 rounded-lg overflow-hidden border border-neon-yellow/30"
           style={{ position: 'relative', minHeight: '600px' }}
         >
-          {/* The emulator will be injected here by vice.js */}
-          <div id="emulator-container" className="absolute inset-0 w-full h-full" />
+          {!isGameStarted && (
+            <div className="absolute inset-0 flex flex-col items-center justify-center p-8 text-center z-10 bg-black/80">
+              <div className="mb-8 max-w-2xl">
+                <div className="relative w-full h-64 mb-6 overflow-hidden rounded-lg border-2 border-neon-yellow/30">
+                  <img 
+                    src="/games/Blockheads_Thumb.png" 
+                    alt="Blockheads Game Screenshot"
+                    className="w-full h-full object-contain"
+                    onError={(e) => {
+                      // Fallback in case the image fails to load
+                      const target = e.target as HTMLImageElement;
+                      target.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iODAwIiBoZWlnaHQ9IjYwMCIgdmlld0JveD0iMCAwIDgwMCA2MDAiIGZpbGw9IiMxZDFkMWQiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHJlY3Qgd2lkdGg9IjEwMCUiIGhlaWdodD0iMTAwJSIgZmlsbD0iIzFkMWQxZCIvPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiBmb250LWZhbWlseT0ibW9ub3NwYWNlIiBmb250LXNpemU9IjE0IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmaWxsPSIjZmZmIiBkeT0iLjNlbSI+QkxPQ0tIRUFEUyBQUkVWSUVXPC90ZXh0Pjwvc3Zn=='; 
+                      console.error('Failed to load thumbnail image');
+                    }}
+                  />
+                </div>
+                <h2 className="text-3xl font-bold text-neon-yellow mb-4">BLOCKHEADS</h2>
+                <p className="text-gray-300 mb-6">A classic C64 action game from 1983 where you control a character through various platforming challenges.</p>
+                <div className="flex flex-wrap justify-center gap-3 mb-6">
+                  <span className="px-3 py-1 bg-amber-900/40 text-amber-200 text-xs rounded-full">PLATFORMER</span>
+                  <span className="px-3 py-1 bg-blue-900/40 text-blue-200 text-xs rounded-full">SINGLE PLAYER</span>
+                  <span className="px-3 py-1 bg-purple-900/40 text-purple-200 text-xs rounded-full">CLASSIC</span>
+                </div>
+              </div>
+            </div>
+          )}
           
-          {/* Keep the canvas for any overlay UI elements */}
+          {/* The emulator will be injected here by vice.js */}
+          <div id="emulator-container" className={`absolute inset-0 w-full h-full ${!isGameStarted ? 'invisible' : 'visible'}`}>
+            {/* The emulator will be injected here by vice.js */}
+          </div>
+          
+          {/* Canvas for any overlay UI elements */}
           <canvas
             ref={canvasRef}
             id="game-canvas"
             className="absolute inset-0 w-full h-full pointer-events-none"
             width={800}
             height={600}
-            style={{ zIndex: 1 }}
+            style={{ zIndex: 1, visibility: isGameStarted ? 'visible' : 'hidden' }}
           />
           
           {isGameStarted && (
@@ -230,29 +344,34 @@ export default function Home() {
         </div>
 )}
 
-        <div className="mt-8 text-center">
-          <div className="inline-flex flex-col items-center p-6 bg-black/40 rounded-lg border border-neon-yellow/20">
-            <h3 className="text-neon-yellow text-lg font-bold mb-2 uppercase tracking-wider">
+        <div className="w-full max-w-4xl mx-auto px-4" style={{ paddingBottom: '1.5625rem' }}>
+          <div className="w-full p-6 bg-black/40 rounded-lg border border-neon-yellow/20">
+            <h3 className="text-neon-yellow text-lg font-bold mb-3 uppercase tracking-wider text-center">
               TODAY'S FEATURE
             </h3>
-            <p className="text-2xl font-black text-white mb-2">
-              BLOCKHEADS
-            </p>
-            <p className="text-gray-300 text-sm mb-4">
-              CLASSIC C64 ACTION • 1983 • MASTERTRONIC
-            </p>
-            <div className="flex gap-3 justify-center flex-wrap">
-              <span className="px-3 py-1 bg-amber-900/40 text-amber-200 text-xs rounded-full">
-                ARCADE
-              </span>
-              <span className="px-3 py-1 bg-blue-900/40 text-blue-200 text-xs rounded-full">
-                1-2 PLAYERS
-              </span>
+            <div className="space-y-4">
+              <h2 className="text-2xl md:text-3xl font-black text-white text-center">
+                BLOCKHEADS
+              </h2>
+              <p className="text-gray-300 text-sm md:text-base text-center">
+                NEW C64 ACTION • 2020 • Carleton Handley
+              </p>
+              <div className="flex flex-wrap justify-center gap-3 mt-4">
+                <span className="px-3 py-1 bg-amber-900/40 text-amber-200 text-xs rounded-full whitespace-nowrap">
+                  ARCADE
+                </span>
+                <span className="px-3 py-1 bg-blue-900/40 text-blue-200 text-xs rounded-full whitespace-nowrap">
+                  1-2 PLAYERS
+                </span>
+                <span className="px-3 py-1 bg-purple-900/40 text-purple-200 text-xs rounded-full whitespace-nowrap">
+                  PLATFORMER
+                </span>
+              </div>
             </div>
           </div>
         </div>
         
-        <div className="mt-6 text-xs text-gray-500 flex flex-wrap justify-center gap-4">
+        <div className="pt-6 pb-[1.5625rem] text-xs text-gray-500 flex flex-wrap justify-center gap-4">
           <span>↑↓←→ TO MOVE</span>
           <span>SPACE TO FIRE</span>
           <span>ENTER TO START</span>
@@ -264,7 +383,7 @@ export default function Home() {
             disabled={isLoading}
             className="px-6 py-3 bg-red-700 border-4 border-yellow-300 text-white font-bold rounded text-shadow-lg hover:bg-red-500 focus:outline-none focus:ring-4 focus:ring-yellow-300 disabled:opacity-50 disabled:cursor-not-allowed transition-colors uppercase text-lg z-50"
           >
-            {isLoading ? 'Initializing...' : 'Start Game'}
+            {isLoading ? 'Running...' : 'Start Emulator'}
           </button>
         </div>
       </div>
