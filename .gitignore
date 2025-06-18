@@ -1,3 +1,18 @@
-node_modules
+# Dependencies
+node_modules/
+
+# System files
 .DS_Store
+
+# Next.js
 .next/*
+
+# Emulator files
+public/emulatorjs/data
+public/emulatorjs/cores
+public/emulatorjs/emulators
+public/emulatorjs/*.js
+public/emulatorjs/*.css
+
+# Game ROMs
+public/games/
