@@ -138,6 +138,7 @@ window.EJS_useWebGL = config.EJS_useWebGL;
 window.EJS_lightgun = config.EJS_lightgun;
 window.EJS_volume = config.EJS_volume;
 window.EJS_buttons = config.EJS_buttons;
+window.EJS_startOnLoaded = true;
 
 // Debug info
 console.log('Emulator config:', config);

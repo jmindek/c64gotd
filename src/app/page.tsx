@@ -1,390 +1,249 @@
 'use client';
 
-import { useRef, useState, useEffect, useCallback, useMemo } from 'react';
-import { JoystickDirection } from '@/components/Joystick/Joystick';
-import dynamic from 'next/dynamic';
+import { useState, useEffect, useRef } from 'react';
+import { GameManager } from '../utils/gameManager';
 
-declare global {
-  interface Window {
-    EJS_emulator: any;
-    EJS_player: string;
-    EJS_core: string;
-    EJS_coreModule?: string;
-    EJS_gameName: string;
-    EJS_gameUrl: string;
-    EJS_pathtodata: string;
-    EJS_lightgun?: boolean;
-    EJS_useWebGL?: boolean;
-    EJS_useWasm?: boolean;
-    EJS_wasmPath?: string;
-    EJS_wasmBinaryFile?: string;
-    EJS_wasmMemory?: WebAssembly.Memory;
-    EJS_wasmBinary?: ArrayBuffer;
-    EJS_volume?: number;
-    EJS_buttons?: Record<string, unknown>;
-  }
-}
-
-// Dynamically import the Joystick component with SSR disabled
-const Joystick = dynamic(
-  () => import('@/components/Joystick/Joystick'),
-  { ssr: false }
-);
+type GameData = {
+  name: string;
+  year?: number;
+  publisher?: string;
+  genre?: string;
+  players?: string;
+  description?: string;
+  d64Path?: string;
+  thumbnailPath?: string;
+};
 
 export default function Home() {
-  // Canvas ref for potential future use
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-  const [isGameStarted, setIsGameStarted] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [loadingProgress, setLoadingProgress] = useState(0);
+  const [isGameStarted, setIsGameStarted] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [gameData, setGameData] = useState<GameData>({
+    name: 'Loading...',
+    year: 1983,
+    publisher: 'COMMODORE',
+    genre: 'ARCADE',
+    players: '1-2 PLAYERS',
+    description: 'A classic Commodore 64 game.'
+  });
 
-  // Joystick handlers
-  const handleJoystickMove = useCallback((direction: string) => {
-    // Map joystick directions to keyboard events
-    let key = '';
-    switch (direction) {
-      case 'UP': key = 'ArrowUp'; break;
-      case 'RIGHT': key = 'ArrowRight'; break;
-      case 'DOWN': key = 'ArrowDown'; break;
-      case 'LEFT': key = 'ArrowLeft'; break;
-      case 'BUTTON': key = ' '; break; // Space for fire button
-      default: return;
-    }
-    
-    // Dispatch keyboard event
-    const event = new KeyboardEvent('keydown', { key, code: key });
-    window.dispatchEvent(event);
-  }, []);
-
-  const handleJoystickStop = useCallback(() => {
-    // Dispatch keyup for all possible joystick keys
-    ['ArrowUp', 'ArrowRight', 'ArrowDown', 'ArrowLeft', ' '].forEach(key => {
-      const event = new KeyboardEvent('keyup', { key, code: key });
-      window.dispatchEvent(event);
-    });
-  }, []);
-
-  // Memoize the joystick component to prevent re-renders
-  const JoystickComponent = useMemo(() => {
-    // Cast the direction to JoystickDirection type to satisfy TypeScript
-    const handleMove = (direction: JoystickDirection) => {
-      if (direction) { // Only call if direction is not null
-        handleJoystickMove(direction);
-      } else {
-        handleJoystickStop();
+  // Load game data
+  useEffect(() => {
+    const loadGame = async () => {
+      console.log('Loading game data...');
+      try {
+        const { GameManager } = await import('@/utils/gameManager');
+        console.log('Fetching today\'s game...');
+        const todaysGame = await GameManager.getTodaysGame();
+        console.log('Today\'s game:', todaysGame);
+        
+        if (todaysGame) {
+          const updatedGameData: GameData = {
+            name: todaysGame.name.toUpperCase(),
+            d64Path: todaysGame.d64Path,
+            thumbnailPath: todaysGame.thumbnailPath,
+            description: todaysGame.description || 'A classic Commodore 64 game.',
+            year: typeof todaysGame.year === 'number' ? todaysGame.year : 1983,
+            publisher: todaysGame.publisher || 'UNKNOWN',
+            genre: todaysGame.genre || 'ARCADE',
+            players: todaysGame.players || '1-2 PLAYERS'
+          };
+          
+          console.log('Setting game data:', updatedGameData);
+          setGameData(updatedGameData);
+          
+          // Preload the game thumbnail
+          if (updatedGameData.thumbnailPath) {
+            const img = new Image();
+            img.src = updatedGameData.thumbnailPath;
+          }
+        } else {
+          console.warn('No game found for today');
+          setGameData(prev => ({
+            ...prev,
+            name: 'NO GAME',
+            description: 'No game available for today. Please try again later.'
+          }));
+        }
+      } catch (error) {
+        console.error('Error loading game:', error);
+        setGameData({
+          name: 'ERROR',
+          description: 'Failed to load game data. Please refresh the page to try again.',
+          year: 1983,
+          publisher: 'ERROR',
+          genre: 'ERROR',
+          players: '0'
+        });
       }
     };
-    
-    return <Joystick onMove={handleMove} onStop={handleJoystickStop} />;
-  }, [handleJoystickMove, handleJoystickStop]);
 
-  // Utility to load a script dynamically
-  const loadScript = (src: string, callback?: () => void) => {
-    if (document.querySelector(`script[src="${src}"]`)) {
-      if (callback) callback();
-      return;
-    }
-    const script = document.createElement('script');
-    script.src = src;
-    script.onload = callback || null;
-    document.body.appendChild(script);
-  };
-
-  // Handle emulator errors
-  useEffect(() => {
-    const handleEmulatorError = (event: Event) => {
-      const customEvent = event as CustomEvent;
-      const { message, error } = customEvent.detail || {};
-      const errorMessage = error || message || 'An unknown error occurred while loading the game';
-      console.error('Emulator error:', errorMessage);
-      setError(errorMessage);
-      setIsLoading(false);
-      setIsGameStarted(false);
-    };
-
-    // Add event listener for emulator errors
-    window.addEventListener('emulatorError', handleEmulatorError as EventListener);
-
-    // Clean up event listener
-    return () => {
-      window.removeEventListener('emulatorError', handleEmulatorError as EventListener);
-    };
+    loadGame();
   }, []);
 
-  // Start the game
-  const handleStartGame = useCallback(() => {
-    console.log('Start button clicked');
+  const handleStartGame = async () => {
+    console.log('Start game clicked');
+    console.log('Game data:', gameData);
+    
+    if (!gameData.d64Path) {
+      const errorMsg = 'No game path available';
+      console.error(errorMsg);
+      setError(errorMsg);
+      return;
+    }
+
     setIsLoading(true);
     setError(null);
     
-    // Hide the preview immediately
-    console.log('Hiding preview');
-    setIsGameStarted(true);
-    
-    // Create or get the emulator container
-    let container = document.getElementById('emulator-container');
-    if (!container) {
-      console.log('Creating new emulator container');
-      container = document.createElement('div');
-      container.id = 'emulator-container';
-      container.className = 'absolute inset-0 w-full h-full';
-      document.getElementById('game-area')?.appendChild(container);
-    }
-    
-    // Set emulator configuration
-    console.log('Setting up emulator with config:', {
-      player: '#emulator-container',
-      core: 'vice',
-      gameName: 'Blockheads',
-      gameUrl: '/games/Blockheads.d64',
-      pathtodata: 'https://www.emulatorjs.com/stable/data/'
-    });
-    
-    window.EJS_player = '#emulator-container';
-    window.EJS_core = 'vice_x64sc';
-    window.EJS_coreModule = 'vice_x64sc-thread-wasm';
-    window.EJS_gameName = 'Blockheads';
-    window.EJS_gameUrl = '/games/Blockheads.d64';
-    window.EJS_lightgun = false;
-    window.EJS_useWebGL = true;
-    window.EJS_volume = 1.0;
-    window.EJS_buttons = {};
-    window.EJS_useWasm = true;
-    window.EJS_wasmPath = 'cores/vice_x64sc-thread-wasm.js';
-    window.EJS_wasmBinaryFile = 'cores/vice_x64sc-thread-wasm.wasm';
-    window.EJS_wasmMemory = undefined; // Let the browser handle memory allocation
-    window.EJS_wasmBinary = undefined; // Let the browser handle binary loading
-    // Set the correct base URL for EmulatorJS
-    const emulatorBaseUrl = 'https://cdn.emulatorjs.org/stable/data/';
-    window.EJS_pathtodata = emulatorBaseUrl;
-    
-    console.log('Loading emulator from:', emulatorBaseUrl);
-    
-    // Check if script is already loaded
-    if (!window.EJS_emulator) {
-      console.log('Loading emulator script...');
-      const script = document.createElement('script');
-      script.src = `${emulatorBaseUrl}loader.js`;
-      script.async = true;
-      script.onload = () => {
-        console.log('Emulator script loaded successfully');
-        setIsLoading(false);
-      };
-      script.onerror = (error) => {
-        console.error('Failed to load emulator script:', {
-          error,
-          url: script.src,
-          readyState: script.readyState
-        });
-        setError('Failed to load the emulator. Please check your connection and try again.');
-        setIsLoading(false);
-        setIsGameStarted(false);
-      };
+    try {
+      // Force a small delay to ensure the UI updates before loading the emulator
+      await new Promise(resolve => setTimeout(resolve, 100));
       
-      // Add some debug info
-      script.onloadstart = () => console.log('Starting to load emulator script...');
-      script.onprogress = (e) => console.log('Loading emulator script...', e);
+      console.log('Starting game:', gameData.name, 'Path:', gameData.d64Path);
+      const success = await GameManager.initializeEmulator(gameData.d64Path);
       
-      document.body.appendChild(script);
-    } else {
-      console.log('Emulator already loaded');
+      if (success) {
+        console.log('Game started successfully');
+        setIsGameStarted(true);
+      } else {
+        const errorMsg = 'Failed to initialize emulator';
+        console.error(errorMsg);
+        setError(errorMsg);
+      }
+    } catch (error) {
+      console.error('Error starting game:', error);
+      setError('An error occurred while loading the game.');
+    } finally {
       setIsLoading(false);
     }
-    
-    // Add a small delay to check if the emulator initialized
-    setTimeout(() => {
-      console.log('Checking emulator state:', { 
-        EJS_emulator: window.EJS_emulator,
-        container: document.getElementById('emulator-container')?.innerHTML 
+  };
+
+  // Clean up emulator on unmount
+  useEffect(() => {
+    return () => {
+      // Import and stop emulator when component unmounts
+      import('@/utils/gameManager').then(({ GameManager }) => {
+        GameManager.stopEmulator();
       });
-    }, 1000);
+    };
   }, []);
 
+  // Create a ref for the emulator container
+  const emulatorContainerRef = useRef<HTMLDivElement>(null);
+
+  // Handle emulator initialization when game starts
+  useEffect(() => {
+    let isMounted = true;
+
+    const initEmulator = async () => {
+      if (isGameStarted && gameData?.d64Path) {
+        try {
+          await GameManager.initializeEmulator(gameData.d64Path);
+          if (isMounted) {
+            // Force a re-render to ensure the canvas is properly attached
+            setIsGameStarted(true);
+          }
+        } catch (error) {
+          console.error('Error initializing emulator:', error);
+          if (isMounted) {
+            setError('Failed to load the game. Please try again.');
+            setIsGameStarted(false);
+          }
+        } finally {
+          if (isMounted) {
+            setIsLoading(false);
+          }
+        }
+      }
+    };
+
+    initEmulator();
+
+    return () => {
+      isMounted = false;
+      // Clean up the emulator when the component unmounts or game changes
+      GameManager.stopEmulator();
+    };
+  }, [isGameStarted, gameData]);
+
   return (
-    <div className="min-h-screen bg-darker-bg py-8">
-      <div className="text-center">
-        <h1 className="text-center text-4xl font-bold text-neon-yellow uppercase tracking-wider">
-          C64 GAME OF THE DAY
-        </h1>
-      </div>
-      
+    <div className="min-h-screen bg-gray-900 p-8">
       <div className="max-w-4xl mx-auto px-4">
-        <div 
-          data-testid="game-area"
-          id="game-area"
-          className="relative w-full aspect-[4/3] min-h-[600px] min-w-[800px] bg-black/50 rounded-lg overflow-hidden border border-neon-yellow/30"
-          style={{ position: 'relative', minHeight: '600px' }}
-        >
-          {!isGameStarted && (
-            <div className="absolute inset-0 flex flex-col items-center justify-center p-8 text-center z-10 bg-black/80">
-              <div className="mb-8 max-w-2xl">
-                <div className="relative w-full h-64 mb-6 overflow-hidden rounded-lg border-2 border-neon-yellow/30">
-                  <img 
-                    src="/games/Blockheads_Thumb.png" 
-                    alt="Blockheads Game Screenshot"
-                    className="w-full h-full object-contain"
-                    onError={(e) => {
-                      // Fallback in case the image fails to load
-                      const target = e.target as HTMLImageElement;
-                      target.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iODAwIiBoZWlnaHQ9IjYwMCIgdmlld0JveD0iMCAwIDgwMCA2MDAiIGZpbGw9IiMxZDFkMWQiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHJlY3Qgd2lkdGg9IjEwMCUiIGhlaWdodD0iMTAwJSIgZmlsbD0iIzFkMWQxZCIvPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiBmb250LWZhbWlseT0ibW9ub3NwYWNlIiBmb250LXNpemU9IjE0IiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmaWxsPSIjZmZmIiBkeT0iLjNlbSI+QkxPQ0tIRUFEUyBQUkVWSUVXPC90ZXh0Pjwvc3Zn=='; 
-                      console.error('Failed to load thumbnail image');
-                    }}
-                  />
-                </div>
-                <h2 className="text-3xl font-bold text-neon-yellow mb-4">BLOCKHEADS</h2>
-                <p className="text-gray-300 mb-6">A classic C64 action game from 1983 where you control a character through various platforming challenges.</p>
-                <div className="flex flex-wrap justify-center gap-3 mb-6">
-                  <span className="px-3 py-1 bg-amber-900/40 text-amber-200 text-xs rounded-full">PLATFORMER</span>
-                  <span className="px-3 py-1 bg-blue-900/40 text-blue-200 text-xs rounded-full">SINGLE PLAYER</span>
-                  <span className="px-3 py-1 bg-purple-900/40 text-purple-200 text-xs rounded-full">CLASSIC</span>
-                </div>
-              </div>
-            </div>
-          )}
+        <div className="text-center mb-8">
+          <h1 className="text-4xl font-bold text-yellow-400 uppercase tracking-wider">
+            C64 GAME OF THE DAY
+          </h1>
           
-          {/* The emulator will be injected here by vice.js */}
-          <div id="emulator-container" className={`absolute inset-0 w-full h-full ${!isGameStarted ? 'invisible' : 'visible'}`}>
-            {/* The emulator will be injected here by vice.js */}
-          </div>
-          
-          {/* Canvas for any overlay UI elements */}
-          <canvas
-            ref={canvasRef}
-            id="game-canvas"
-            className="absolute inset-0 w-full h-full pointer-events-none"
-            width={800}
-            height={600}
-            style={{ zIndex: 1, visibility: isGameStarted ? 'visible' : 'hidden' }}
-          />
-          
-          {isGameStarted && (
-            <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-              <div className="bg-black/70 text-white px-4 py-2 rounded-lg text-xl font-mono">
-                BLOCKHEADS
-              </div>
-            </div>
-          )}
-          
-          // removed overlay from game-area
-
-
-          {isLoading && (
-            <div className="absolute inset-0 flex flex-col items-center justify-center bg-black/90">
-              <div className="text-center">
-                <div className="w-12 h-12 border-4 border-neon-yellow border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-                <h3 className="text-xl font-bold text-neon-yellow mb-2">Loading System</h3>
-                <p className="text-gray-300">
-                  Initializing: <span className="text-neon-yellow font-mono">{loadingProgress}%</span>
-                </p>
-                <div className="w-48 h-1.5 bg-gray-800 rounded-full mt-4 overflow-hidden">
-                  <div 
-                    className="h-full bg-neon-yellow transition-all duration-300"
-                    style={{ width: `${loadingProgress}%` }}
-                  />
-                </div>
-              </div>
-            </div>
-          )}
-
-          {error && (
-            <div className="absolute inset-0 flex items-center justify-center bg-black/90 p-6 z-50">
-              <div className="text-center p-8 bg-red-900/80 rounded-lg max-w-md border border-red-600/50">
-                <h3 className="text-2xl font-bold text-red-400 mb-4">System Error</h3>
-                <p className="text-red-200 mb-6">{error}</p>
-                <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                  <button
-                    onClick={handleStartGame}
-                    className="px-6 py-3 bg-red-600 text-white font-medium rounded hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transition-colors"
-                  >
-                    Try Again
-                  </button>
-                  <button
-                    onClick={() => {
-                      setError(null);
-                      setIsLoading(false);
-                    }}
-                    className="px-6 py-3 bg-gray-600 text-white font-medium rounded hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition-colors"
-                  >
-                    Dismiss
-                  </button>
-                </div>
-                <div className="mt-4 text-xs text-red-300 text-left bg-black/30 p-2 rounded overflow-auto max-h-24">
-                  <div className="font-mono text-xs">
-                    {error.includes('http') ? (
-                      <a 
-                        href={error.split(' ').find(part => part.startsWith('http'))} 
-                        target="_blank" 
-                        rel="noopener noreferrer"
-                        className="text-blue-300 hover:underline break-all"
-                      >
-                        {error}
-                      </a>
-                    ) : (
-                      error
-                    )}
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
-        </div> {/* end game-area */}
-
-        {isGameStarted && (
-  <div className="md:hidden mt-8 p-6 bg-black/30 rounded-lg border border-neon-yellow/20 z-10">
-          <h3 className="text-neon-yellow text-lg font-bold mb-4 text-center uppercase tracking-wider">
-            On-Screen Controls
-          </h3>
-          <p className="text-gray-300 mb-4 text-center">
-            Use the virtual joystick or keyboard controls to play
-          </p>
-          <div className="flex justify-center">
-            {JoystickComponent}
-          </div>
-        </div>
-)}
-
-        <div className="w-full max-w-4xl mx-auto px-4" style={{ paddingBottom: '1.5625rem' }}>
-          <div className="w-full p-6 bg-black/40 rounded-lg border border-neon-yellow/20">
-            <h3 className="text-neon-yellow text-lg font-bold mb-3 uppercase tracking-wider text-center">
-              TODAY'S FEATURE
-            </h3>
-            <div className="space-y-4">
-              <h2 className="text-2xl md:text-3xl font-black text-white text-center">
-                BLOCKHEADS
-              </h2>
-              <p className="text-gray-300 text-sm md:text-base text-center">
-                NEW C64 ACTION • 2020 • Carleton Handley
-              </p>
-              <div className="flex flex-wrap justify-center gap-3 mt-4">
-                <span className="px-3 py-1 bg-amber-900/40 text-amber-200 text-xs rounded-full whitespace-nowrap">
-                  ARCADE
-                </span>
-                <span className="px-3 py-1 bg-blue-900/40 text-blue-200 text-xs rounded-full whitespace-nowrap">
-                  1-2 PLAYERS
-                </span>
-                <span className="px-3 py-1 bg-purple-900/40 text-purple-200 text-xs rounded-full whitespace-nowrap">
-                  PLATFORMER
-                </span>
-              </div>
-            </div>
-          </div>
-        </div>
-        
-        <div className="pt-6 pb-[1.5625rem] text-xs text-gray-500 flex flex-wrap justify-center gap-4">
-          <span>↑↓←→ TO MOVE</span>
-          <span>SPACE TO FIRE</span>
-          <span>ENTER TO START</span>
-        </div>
-
-        <div className="mt-8 flex flex-col items-center justify-center">
+          {/* Start Game Button */}
           <button
             onClick={handleStartGame}
             disabled={isLoading}
-            className="px-6 py-3 bg-red-700 border-4 border-yellow-300 text-white font-bold rounded text-shadow-lg hover:bg-red-500 focus:outline-none focus:ring-4 focus:ring-yellow-300 disabled:opacity-50 disabled:cursor-not-allowed transition-colors uppercase text-lg z-50"
+            className={`mt-6 px-8 py-3 bg-yellow-400 text-black font-bold rounded-lg text-lg
+                      hover:bg-yellow-300 active:scale-95 transition-all shadow-lg
+                      focus:outline-none focus:ring-4 focus:ring-yellow-400/50
+                      ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
           >
-            {isLoading ? 'Running...' : 'Start Emulator'}
+            {isLoading ? (
+              <span className="flex items-center justify-center">
+                <svg className="animate-spin -ml-1 mr-2 h-5 w-5 text-black" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                LOADING...
+              </span>
+            ) : 'START GAME'}
           </button>
+        </div>
+        
+        {/* Game Area */}
+        <div id="game-container" className="relative w-full aspect-[4/3] bg-black/90 rounded-lg overflow-hidden mb-8 border border-yellow-400/30">
+          {/* Start Screen Overlay */}
+          {!isGameStarted && (
+            <div className="absolute inset-0 flex flex-col items-center justify-center p-8 text-center bg-black/80 z-10">
+              <h2 className="text-3xl md:text-4xl font-bold text-yellow-400 mb-6 uppercase tracking-wider">
+                {gameData.name}
+              </h2>
+              <p className="text-gray-300 mb-8 text-lg max-w-2xl">
+                {gameData.description || 'A classic Commodore 64 experience'}
+              </p>
+            </div>
+          )}
+          
+          {/* Game content - this is where the emulator will be mounted */}
+          <div 
+            ref={emulatorContainerRef}
+            id="emulator-container" 
+            className="w-full h-full"
+          >
+            {isLoading && (
+              <div className="absolute inset-0 flex items-center justify-center z-20">
+                <div className="text-white text-center bg-black/80 p-4 rounded-lg">
+                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-yellow-400 mx-auto mb-4"></div>
+                  <p>Loading game...</p>
+                </div>
+              </div>
+            )}
+            {error && (
+              <div className="absolute inset-0 flex items-center justify-center z-20">
+                <div className="text-red-400 bg-black/80 p-4 rounded-lg text-center">
+                  {error}
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+        
+        {/* Game Info */}
+        <div className="text-center">
+          <h2 className="text-2xl font-bold text-white mb-2">{gameData.name}</h2>
+          <p className="text-gray-400 text-sm mb-4">
+            {gameData.genre} • {gameData.year} • {gameData.publisher}
+          </p>
+          <p className="text-gray-300">{gameData.players}</p>
+          
+          <div className="mt-6 text-sm text-gray-500">
+            <p>Use arrow keys to navigate • Space to fire • Enter to start</p>
+          </div>
         </div>
       </div>
     </div>

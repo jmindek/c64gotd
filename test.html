@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>C64 Test</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #1a1a1a;
+            color: white;
+            font-family: Arial, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+        }
+        #emulator-container {
+            width: 800px;
+            height: 600px;
+            border: 2px solid #f7d51d;
+            margin: 20px 0;
+        }
+        button {
+            background-color: #f7d51d;
+            color: #1a1a1a;
+            border: none;
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            border-radius: 4px;
+            margin: 10px;
+        }
+        button:hover {
+            background-color: #f2c409;
+        }
+    </style>
+</head>
+<body>
+    <h1>C64 Emulator Test</h1>
+    <div id="emulator-container"></div>
+    <button id="start-button">Start Emulator</button>
+    <div id="status">Click Start to load the emulator</div>
+
+    <script>
+        document.getElementById('start-button').addEventListener('click', async () => {
+            const status = document.getElementById('status');
+            status.textContent = 'Loading emulator...';
+            
+            try {
+                // Load the emulator script
+                const script = document.createElement('script');
+                script.src = 'public/emulator/emulator.js';
+                script.onload = () => {
+                    status.textContent = 'Emulator loaded, initializing...';
+                    // Initialize the emulator
+                    const emulator = new EmulatorJS({
+                        container: document.getElementById('emulator-container'),
+                        // Add your emulator configuration here
+                    });
+                    status.textContent = 'Emulator ready!';
+                };
+                script.onerror = () => {
+                    status.textContent = 'Error loading emulator script';
+                };
+                document.head.appendChild(script);
+            } catch (error) {
+                status.textContent = 'Error: ' + error.message;
+                console.error(error);
+            }
+        });
+    </script>
+</body>
+</html>
