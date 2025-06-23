@@ -1,11 +1,11 @@
 import { defineConfig } from 'vite';
 import { resolve } from 'path';
-import react from '@vitejs/plugin-react';
+
 
 export default defineConfig({
   root: '.',
   publicDir: 'public',
-  plugins: [react()],
+  plugins: [],
   server: {
     port: 3000,
     open: true,
@@ -38,7 +38,7 @@ export default defineConfig({
     }
   },
   optimizeDeps: {
-    include: ['react', 'react-dom'],
+
     exclude: ['@emulatorjs/core-vice_x64']
   },
   define: {

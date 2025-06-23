@@ -24,25 +24,17 @@
     <div class="container">
         <header>
             <h1>C64 GAME OF THE DAY</h1>
+            <h2 id="currentGameTitle"></h2>
             <button id="startButton" class="start-button">START GAME</button>
         </header>
         
-        <div class="game-container">
-            <div id="gameOverlay" class="game-overlay">
-                <h2 id="gameTitle">Loading...</h2>
-                <p id="gameDescription">A classic Commodore 64 experience</p>
-            </div>
-            <div id="emulatorContainer" class="emulator-container">
-                <div id="loadingIndicator" class="loading-indicator hidden">
-                    <div class="spinner"></div>
-                    <p>Loading game...</p>
-                </div>
-                <div id="errorDisplay" class="error-display hidden"></div>
+        <div class="game-container" id="gameContainer">
+            <div id="emulator-container" class="emulatorContainer">
             </div>
         </div>
         
         <div class="game-info">
-            <h2 id="currentGameTitle">Loading...</h2>
+            <h2 id="currentGameTitle"></h2>
             <p class="game-meta" id="gameMeta"></p>
             <p class="game-controls">
                 <span>↑↓←→ TO MOVE</span>
@@ -52,8 +44,7 @@
         </div>
     </div>
 
-    <!-- Load emulator script -->
-    <script src="/emulatorjs/emulator.min.js"></script>
+
     <!-- Load our application script -->
     <script type="module" src="/src/main.ts"></script>
 </body>

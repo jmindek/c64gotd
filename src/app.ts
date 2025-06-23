@@ -2,31 +2,24 @@ import { GameManager } from './utils/gameManager';
 import { GameInfo } from './types/game';
 
 export class App {
-    private gameManager: GameManager;
     private currentGame: GameInfo | null = null;
     private startButton: HTMLButtonElement | null = null;
     private loadingIndicator: HTMLElement | null = null;
     private errorDisplay: HTMLElement | null = null;
     private gameTitleElement: HTMLElement | null = null;
-    private gameContainer: HTMLElement | null = null;
-    private gameMetaElement: HTMLElement | null = null;
-    private gameOverlay: HTMLElement | null = null;
 
-    constructor() {
-        this.gameManager = new GameManager();
-        
-        // Make GameManager available globally for debugging
-        if (typeof window !== 'undefined') {
-            (window as any).GameManager = GameManager;
-        }
-    }
+    private gameMetaElement: HTMLElement | null = null;
 
     async initialize() {
         import('./app/globals.css');
 
         this.cacheElements();
         await this.setupEventListeners();
-        await this.loadGameOfTheDay();
+        const game = await this.loadGameOfTheDay();
+        const currentGameTitle = document.getElementById('currentGameTitle');
+        if (currentGameTitle && game) {
+            currentGameTitle.textContent = game.name;
+        }
     }
 
     private cacheElements() {
@@ -34,9 +27,7 @@ export class App {
         this.loadingIndicator = document.getElementById('loadingIndicator');
         this.errorDisplay = document.getElementById('errorDisplay');
         this.gameTitleElement = document.getElementById('gameTitle');
-        this.gameContainer = document.getElementById('emulatorContainer');
         this.gameMetaElement = document.getElementById('gameMeta');
-        this.gameOverlay = document.getElementById('gameOverlay');
     }
 
     private async setupEventListeners() {
@@ -45,20 +36,22 @@ export class App {
         }
     }
 
-    private async loadGameOfTheDay() {
+        private async loadGameOfTheDay() {
         try {
             this.showLoading(true, 'Loading game...');
             const game = await GameManager.getTodaysGame();
-            
+            console.log('Game:', game);
             if (game) {
                 this.currentGame = game;
                 this.updateGameInfo(this.currentGame);
             } else {
                 this.showError('No games available');
             }
+            return game;
         } catch (error) {
             console.error('Error loading game:', error);
             this.showError('Failed to load game');
+            return null;
         } finally {
             this.showLoading(false);
         }
@@ -67,11 +60,6 @@ export class App {
     private updateGameInfo(game: GameInfo) {
         if (this.gameTitleElement) {
             this.gameTitleElement.textContent = game.name;
-        }
-        
-        const descriptionElement = this.gameOverlay?.querySelector('p');
-        if (descriptionElement) {
-            descriptionElement.textContent = game.description || 'A classic Commodore 64 experience';
         }
         
         if (this.gameMetaElement) {
@@ -93,10 +81,18 @@ export class App {
             return;
         }
 
+        // Hide startButton and prefix game title with 'Loading' in currentGameTitle
+        if (this.startButton) {
+            this.startButton.style.display = 'none';
+        }
+        const currentGameTitle = document.getElementById('currentGameTitle');
+        if (currentGameTitle && this.currentGame) {
+            currentGameTitle.textContent = `Playing ${this.currentGame.name}`;
+        }
+
         try {
             this.showLoading(true, 'Starting game...');
             const success = await GameManager.initializeEmulator(this.currentGame.d64Path);
-            this.hideOverlay();
         } catch (error) {
             console.error('Error starting game:', error);
             this.showError('Failed to start game. Please try again.');
@@ -129,12 +125,6 @@ export class App {
             setTimeout(() => {
                 this.errorDisplay?.classList.add('hidden');
             }, 5000);
-        }
-    }
-
-    private hideOverlay() {
-        if (this.gameOverlay) {
-            this.gameOverlay.style.display = 'none';
         }
     }
 }

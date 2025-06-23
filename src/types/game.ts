@@ -1,4 +1,5 @@
 export interface GameInfo {
+    id: string;
     name: string;
     d64Path: string;
     thumbnailPath: string;

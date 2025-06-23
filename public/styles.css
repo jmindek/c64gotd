@@ -60,24 +60,6 @@ h1 {
     position: relative;
 }
 
-/* Overlay */
-.game-overlay {
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    text-align: center;
-    padding: 2rem;
-    background-color: rgba(0, 0, 0, 0.8);
-    z-index: 10;
-    transition: opacity 0.3s ease;
-}
-
 .game-overlay h2 {
     color: var(--primary);
     font-size: 2rem;
