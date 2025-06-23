@@ -1,0 +1,11 @@
+export interface GameInfo {
+    id: string;
+    name: string;
+    d64Path: string;
+    thumbnailPath: string;
+    description?: string;
+    year?: number;
+    publisher?: string;
+    genre?: string;
+    players?: string;
+}

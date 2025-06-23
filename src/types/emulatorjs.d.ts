@@ -15,11 +15,36 @@ interface Window {
   EJS_useWasm?: boolean;
   EJS_BIOS?: string;
   EJS_ready?: () => void;
+  EJS_wasmPath?: string;
+  EJS_wasmBinaryFile?: string;
+  EJS_wasmBinary?: ArrayBuffer;
+  EJS_wasmMemory?: WebAssembly.Memory;
+  EJS_buttons?: {
+    [key: string]: {
+      type: 'button' | 'key';
+      button?: number;
+      key?: string;
+      description: string;
+    };
+  };
+  EJS_startOnLoaded?: boolean;
   EJS_emulator?: {
     stop: () => void;
     [key: string]: any;
   };
   EJS?: new (elementId: string, options: any) => any;
+  EJS_coreModule?: any;
+  EJS_onStart?: () => void;
+  EJS_onLoad?: () => void;
+  EJS_onGameStart?: () => void;
+  EJS_onGameEnd?: () => void;
+  EJS_onSaveState?: () => void;
+  EJS_onLoadState?: () => void;
+  EJS_onPause?: () => void;
+  EJS_onResume?: () => void;
+  EJS_onFullscreen?: () => void;
+  EJS_onExitFullscreen?: () => void;
+  EJS_onError?: (error: Error) => void;
 }
 
 declare const window: Window;
