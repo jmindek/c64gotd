@@ -1,6 +1,7 @@
 // Interface and localStorage implementation for game history storage
-import { GameHistoryMap } from './gameHistoryManager';
+import type { GameHistoryMap } from './gameHistoryManager';
 import { GAME_HISTORY_KEY } from './config';
+import { Logger } from './logger';
 
 export interface IGameHistoryStore {
   load(): GameHistoryMap;
@@ -13,6 +14,7 @@ export class LocalGameHistoryStore implements IGameHistoryStore {
     if (typeof window === 'undefined') return {};
     try {
       const savedHistory = localStorage.getItem(GAME_HISTORY_KEY);
+      /* eslint-disable-next-line */
       return savedHistory ? JSON.parse(savedHistory) : {};
     } catch (error) {
       return {};
@@ -22,7 +24,9 @@ export class LocalGameHistoryStore implements IGameHistoryStore {
     if (typeof window === 'undefined') return;
     try {
       localStorage.setItem(GAME_HISTORY_KEY, JSON.stringify(history));
-    } catch (error) {}
+    } catch (error) {
+      Logger.error('Error saving game history:', error);
+    }
   }
   reset(): void {
     if (typeof window !== 'undefined') {

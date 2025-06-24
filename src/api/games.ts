@@ -1,4 +1,4 @@
-import { GameInfo } from '../types/game';
+import type { GameInfo } from '../types/game';
 
 export const GAMES: GameInfo[] = [
   {
@@ -10,10 +10,10 @@ export const GAMES: GameInfo[] = [
     year: 2022,
     publisher: 'Carleton Handley',
     genre: 'Platform',
-    players: '1'
+    players: '1',
   },
   {
-    id: 'legacy-of-the-lost-spell', 
+    id: 'legacy-of-the-lost-spell',
     name: 'Legacy of the Lost Spell',
     d64Path: '/games/Legacy of the Lost Spell Preview + [BLZ].d64',
     thumbnailPath: '/games/thumbnails/Legacy of the Lost Spell.png',
@@ -21,7 +21,7 @@ export const GAMES: GameInfo[] = [
     year: 2025,
     publisher: 'Blazon',
     genre: 'RPG',
-    players: '1'
+    players: '1',
   },
   {
     id: 'luna',
@@ -32,7 +32,7 @@ export const GAMES: GameInfo[] = [
     year: 2019,
     publisher: 'Shallan',
     genre: 'Run n Gun',
-    players: '1'
+    players: '1',
   },
   {
     id: 'showdown',
@@ -43,8 +43,8 @@ export const GAMES: GameInfo[] = [
     year: 2020,
     publisher: 'Badgerpunch Games',
     genre: 'Action',
-    players: '1-2'
-  }
+    players: '1-2',
+  },
 ];
 
 export async function getGames(): Promise<GameInfo[]> {

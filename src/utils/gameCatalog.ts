@@ -1,5 +1,6 @@
 import type { GameInfo } from '@/types/game';
-import { IGameCatalogStore, LocalGameCatalogStore } from './gameCatalogStore';
+import type { IGameCatalogStore } from './gameCatalogStore';
+import { LocalGameCatalogStore } from './gameCatalogStore';
 
 export class GameCatalog {
   private store: IGameCatalogStore;
