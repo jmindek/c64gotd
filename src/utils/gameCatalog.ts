@@ -1,22 +1,15 @@
-// Handles fetching and returning available games
 import type { GameInfo } from '@/types/game';
+import { IGameCatalogStore, LocalGameCatalogStore } from './gameCatalogStore';
 
 export class GameCatalog {
-  /**
-   * Get all available games from the imported list
-   * @returns Promise resolving to array of GameInfo
-   */
-  public static async getAvailableGames(): Promise<GameInfo[]> {
-    try {
-      const { GAMES } = await import('@/api/games');
-      if (!GAMES || GAMES.length === 0) {
-        console.warn('No games found in the games list');
-        return [];
-      }
-      return GAMES;
-    } catch (error) {
-      console.error('Error getting available games:', error);
-      return [];
-    }
+  private store: IGameCatalogStore;
+  constructor(store: IGameCatalogStore = new LocalGameCatalogStore()) {
+    this.store = store;
+  }
+  public async getAvailableGames(): Promise<GameInfo[]> {
+    return this.store.getAvailableGames();
   }
 }
+
+// Default singleton for legacy usage
+export const DefaultGameCatalog = new GameCatalog();

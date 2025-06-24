@@ -1,6 +1,6 @@
 // Handles all game history and localStorage logic
-import { GAME_HISTORY_KEY } from './config';
 import { Logger } from './logger';
+import { IGameHistoryStore, LocalGameHistoryStore } from './gameHistoryStore';
 
 export interface GameHistory {
   lastPlayed: string;
@@ -11,50 +11,41 @@ export interface GameHistory {
 export type GameHistoryMap = Record<string, GameHistory>;
 
 export class GameHistoryManager {
-  private static gameHistory: GameHistoryMap = {};
+  private gameHistory: GameHistoryMap = {};
+  private store: IGameHistoryStore;
 
-  /** Load game history from localStorage */
-  public static load(): GameHistoryMap {
-    if (typeof window === 'undefined') return {};
-    try {
-      const savedHistory = localStorage.getItem(GAME_HISTORY_KEY);
-      Logger.warn(`Loaded game history: ${savedHistory}`);
-      if (savedHistory) {
-        this.gameHistory = JSON.parse(savedHistory);
-      }
-    } catch (error) {
-      Logger.error('Error loading game history:', error);
-      this.gameHistory = {};
-    }
+  constructor(store: IGameHistoryStore = new LocalGameHistoryStore()) {
+    this.store = store;
+    this.gameHistory = {};
+  }
+
+  /** Load game history from the injected store */
+  public load(): GameHistoryMap {
+    this.gameHistory = this.store.load();
+    Logger.info('Loaded game history:', this.gameHistory);
     return this.gameHistory;
   }
 
-  /** Save game history to localStorage */
-  public static save(): void {
-    if (typeof window === 'undefined') return;
-    try {
-      localStorage.setItem(GAME_HISTORY_KEY, JSON.stringify(this.gameHistory));
-      Logger.info('Game history saved:', this.gameHistory);
-    } catch (error) {
-      Logger.error('Error saving game history:', error);
-    }
+  /** Save game history to the injected store */
+  public save(): void {
+    this.store.save(this.gameHistory);
+    Logger.info('Game history saved:', this.gameHistory);
   }
 
   /** Reset game history (for testing/development) */
-  public static reset(): void {
+  public reset(): void {
     this.gameHistory = {};
-    if (typeof window !== 'undefined') {
-      localStorage.removeItem(GAME_HISTORY_KEY);
-    }
+    this.store.reset();
+    Logger.info('Game history reset');
   }
 
   /** Get the current game history map */
-  public static getHistory(): GameHistoryMap {
+  public getHistory(): GameHistoryMap {
     return this.gameHistory;
   }
 
   /** Update history for a specific game */
-  public static updateGame(gameId: string, today: string, now: number): void {
+  public updateGame(gameId: string, today: string, now: number): void {
     this.gameHistory[gameId] = {
       lastPlayed: today,
       lastPlayedTime: now,
@@ -63,3 +54,7 @@ export class GameHistoryManager {
     this.save();
   }
 }
+
+// Default singleton for legacy usage
+export const DefaultGameHistoryManager = new GameHistoryManager();
+

@@ -41,10 +41,10 @@ type GameState = 'idle' | 'loading' | 'running' | 'error';
 type StateChangeCallback = (state: GameState) => void;
 
 // Game history management
-import { GameHistoryManager, GameHistory, GameHistoryMap } from './gameHistoryManager';
+import { GameHistoryManager, GameHistory, GameHistoryMap, DefaultGameHistoryManager } from './gameHistoryManager';
 
 import { EmulatorManager } from './emulatorManager';
-import { GameCatalog } from './gameCatalog';
+import { GameCatalog, DefaultGameCatalog } from './gameCatalog';
 
 export class GameManager {
   private static readonly GAME_HISTORY_KEY = GAME_HISTORY_KEY;
@@ -79,7 +79,7 @@ export class GameManager {
 
   // Get all available games from the imported list
   public static async getAvailableGames(): Promise<GameInfo[]> {
-    return GameCatalog.getAvailableGames();
+    return DefaultGameCatalog.getAvailableGames();
   }
 
   // Emulator lifecycle delegation
@@ -125,13 +125,13 @@ export class GameManager {
       }
       
       // Load game history
-      const gameHistory = GameHistoryManager.load();
+      const gameHistory = DefaultGameHistoryManager.load();
       const now = Date.now();
       const today = new Date(now).toDateString();
 
       // Check if we have a game set for today
-      const todaysGameId = Object.entries(gameHistory).find(
-        ([_, history]) => history.lastPlayed === today
+      const todaysGameId = Object.entries(gameHistory as GameHistoryMap).find(
+        ([_, history]) => (history as GameHistory).lastPlayed === today
       )?.[0];
 
       if (todaysGameId) {
@@ -139,17 +139,17 @@ export class GameManager {
       }
 
       // If no game for today, find the least recently played game
-      const leastPlayedGame = Object.entries(gameHistory).length > 0
-        ? Object.entries(gameHistory).sort(
-            (a, b) => a[1].playCount - b[1].playCount || 
-                     a[1].lastPlayedTime - b[1].lastPlayedTime
+      const leastPlayedGame = Object.entries(gameHistory as GameHistoryMap).length > 0
+        ? Object.entries(gameHistory as GameHistoryMap).sort(
+            (a, b) => (a[1] as GameHistory).playCount - (b[1] as GameHistory).playCount || 
+                     (a[1] as GameHistory).lastPlayedTime - (b[1] as GameHistory).lastPlayedTime
           )[0]
         : null;
 
       const nextGameId = leastPlayedGame ? leastPlayedGame[0] : games[0].id;
 
       // Update game history
-      GameHistoryManager.updateGame(nextGameId, today, now);
+      DefaultGameHistoryManager.updateGame(nextGameId, today, now);
 
       return games.find(game => game.id === nextGameId) || games[0];
     } catch (error) {
@@ -160,7 +160,7 @@ export class GameManager {
   
   // Reset game history (for testing/development)
   public static resetHistory(): void {
-    GameHistoryManager.reset();
+    DefaultGameHistoryManager.reset();
   }
     
 
