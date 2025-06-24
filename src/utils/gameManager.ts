@@ -1,5 +1,16 @@
 // Import and re-export the GameInfo type from the types directory
 import type { GameInfo } from '@/types/game';
+import {
+  EMULATOR_CONTAINER_ID,
+  EMULATOR_SCRIPT_URL,
+  EMULATOR_CSS_URL,
+  EMULATOR_CSS_ID,
+  EMULATOR_SCRIPT_ID,
+  EMULATOR_CORE,
+  EMULATOR_PATH_TO_DATA,
+  GAME_HISTORY_KEY,
+  GAME_LIST_KEY
+} from './config';
 
 export type { GameInfo };
 
@@ -29,23 +40,18 @@ declare global {
 type GameState = 'idle' | 'loading' | 'running' | 'error';
 type StateChangeCallback = (state: GameState) => void;
 
-// Game history interface
-interface GameHistory {
-  lastPlayed: string;
-  lastPlayedTime: number;
-  playCount: number;
-}
+// Game history management
+import { GameHistoryManager, GameHistory, GameHistoryMap, DefaultGameHistoryManager } from './gameHistoryManager';
 
-type GameHistoryMap = Record<string, GameHistory>;
+import { EmulatorManager } from './emulatorManager';
+import { GameCatalog, DefaultGameCatalog } from './gameCatalog';
 
 export class GameManager {
-  private static readonly GAME_HISTORY_KEY = 'c64gotd_game_history';
-  private static readonly GAME_LIST_KEY = 'c64_games';
-  private static gameHistory: GameHistoryMap = {};
-  private static emulator: any = null;
+  private static readonly GAME_HISTORY_KEY = GAME_HISTORY_KEY;
+  private static readonly GAME_LIST_KEY = GAME_LIST_KEY;
+  
   private static stateChangeCallbacks: StateChangeCallback[] = [];
   private static currentState: GameState = 'idle';
-  private static readonly EMULATOR_SCRIPT = 'https://cdn.emulatorjs.org/stable/data/loader.js';
   
   // Prevent instantiation
   private constructor() {}
@@ -73,230 +79,34 @@ export class GameManager {
 
   // Get all available games from the imported list
   public static async getAvailableGames(): Promise<GameInfo[]> {
-    try {
-      // Import the games directly from the API file
-      const { GAMES } = await import('@/api/games');
-      
-      if (!GAMES || GAMES.length === 0) {
-        console.warn('No games found in the games list');
-        return [];
-      }
-      
-      return GAMES;
-    } catch (error) {
-      console.error('Error getting available games:', error);
-      return [];
-    }
+    return DefaultGameCatalog.getAvailableGames();
   }
 
-  /**
-   * Ensures the emulator container exists and is ready for use
-   * @returns The container element
-   * @throws {Error} If document is not available
-   */
-  private static ensureContainer(): HTMLElement {
-    if (typeof document === 'undefined') {
-      throw new Error('Document is not available');
-    }
-
-    const container = document.getElementById('emulator-container');
-    if (!container) {
-      throw new Error('Emulator container not found in DOM!');
-    }
-    container.innerHTML = '';
-    container.style.display = 'block';
-    return container;
+  // Emulator lifecycle delegation
+  public static ensureContainer(): HTMLElement {
+    return EmulatorManager.ensureContainer();
   }
 
-  /**
-   * Stops the currently running emulator instance if any
-   * @returns {Promise<void>}
-   */
+  public static cleanupContainer(): void {
+    EmulatorManager.cleanupContainer();
+  }
+
+  public static async loadEmulatorScript(): Promise<void> {
+    return EmulatorManager.loadEmulatorScript();
+  }
+
   public static async stopEmulator(): Promise<void> {
-    try {
-      if (this.emulator && typeof this.emulator.stop === 'function') {
-        await Promise.resolve(this.emulator.stop());
-      }
-    } catch (error) {
-      console.error('Error stopping emulator:', error);
-      throw error;
-    } finally {
-      // Clean up emulator instance
-      this.emulator = null;
-      
-      // Reset emulator state
-      if (window.EJS_emulator) {
-        try {
-          // Clear any emulator-specific state
-          delete window.EJS_emulator;
-        } catch (e) {
-          console.warn('Error cleaning up emulator state:', e);
-        }
-      }
-      
-      // Reset loading state
-      this.setState('idle');
-      
-      // Clean up container
-      try {
-        const container = this.ensureContainer();
-       // DEBUG: Confirm container exists and is correct before EmulatorJS init
-       console.log('[EJS DEBUG] Container at init:', container);
-       if (container) {
-         console.log('[EJS DEBUG] Container innerHTML:', container.innerHTML);
-       } else {
-         throw new Error('[EJS DEBUG] Emulator container not found at initialization!');
-       }
-        container.innerHTML = '';
-      } catch (error) {
-        console.warn('Could not clean up container:', error);
-      }
-      
-      // Clean up script reference but don't remove the script element
-      // as it might be needed by other instances
-      this.emulatorLoadPromise = null;
-      this.isEmulatorScriptLoading = false;
-    }
+    await EmulatorManager.stopEmulator();
+    this.setState('idle');
   }
 
-  /**
-   * Initializes the emulator with the specified game
-   * @param gamePath Path to the game file
-   * @returns Promise that resolves to true if initialization was successful
-   */
-  private static isEmulatorScriptLoading = false;
-  private static emulatorLoadPromise: Promise<void> | null = null;
-
-  private static async loadEmulatorScript(): Promise<void> {
-    // If already loaded, resolve immediately
-    if (window.EJS_emulator) {
-      return;
-    }
-
-    // If already loading, return the existing promise
-    if (this.emulatorLoadPromise) {
-      return this.emulatorLoadPromise;
-    }
-
-    this.isEmulatorScriptLoading = true;
-    
-    this.emulatorLoadPromise = new Promise<void>((resolve, reject) => {
-      // Check again in case it was loaded while we were waiting
-      if (window.EJS_emulator) {
-        this.isEmulatorScriptLoading = false;
-        resolve();
-        return;
-      }
-
-      console.log('[EJS] Preparing to load emulator script:', this.EMULATOR_SCRIPT);
-      const script = document.createElement('script');
-      script.src = this.EMULATOR_SCRIPT;
-      script.async = true;
-      script.onload = () => {
-        console.log('[EJS] Emulator script loaded successfully');
-        this.isEmulatorScriptLoading = false;
-        resolve();
-      };
-      script.onerror = (e) => {
-        console.error('[EJS] Script load error:', e, 'Script src:', script.src);
-        this.isEmulatorScriptLoading = false;
-        this.emulatorLoadPromise = null;
-        reject(new Error('Failed to load emulator script'));
-      };
-      
-      // Remove any existing script first
-      const existingScript = document.getElementById('emulatorjs-script');
-      if (existingScript) {
-        console.warn('[EJS] Removing existing emulator script tag before adding new one');
-        existingScript.remove();
-      }
-      
-      // Set a unique ID to track the script
-      script.id = 'emulatorjs-script';
-      
-      document.head.appendChild(script);
-      console.log('[EJS] Emulator script tag appended to document head:', script);
-    });
-
-    return this.emulatorLoadPromise;
-  }
-
-  /**
-   * Initializes and starts the emulator with the provided game path
-   * Ensures the emulator container is reset and only one instance runs at a time
-   * @param gamePath Path to the game ROM
-   * @param onStarted Optional callback to run after emulator is running
-   */
   public static async initializeEmulator(gamePath: string, onStarted?: () => void): Promise<boolean> {
-    if (!gamePath) {
-      throw new Error('No game path provided');
-    }
-    
-    // Stop any running emulator and clean up container
-    await this.stopEmulator();
-    this.cleanupContainer();
     this.setState('loading');
-    
     try {
-      // Wait for DOM to be fully loaded
-      if (document.readyState !== 'complete') {
-        await new Promise<void>((resolve) => {
-          if (document.readyState === 'complete') {
-            resolve();
-          } else {
-            window.addEventListener('load', () => resolve(), { once: true });
-          }
-        });
-      }
-      
-      const container = this.ensureContainer();
-      
-      // Optionally notify UI that emulator is running
-      if (onStarted) {
-        onStarted();
-      }
-      // No manual canvas creation here; EmulatorJS will handle it.
-      
-      // Set up emulator configuration
-      window.EJS_player = '#emulator-container';
-      window.EJS_core = 'vice_x64';
-      window.EJS_gameUrl = gamePath;
-      window.EJS_pathtodata = 'https://cdn.emulatorjs.org/stable/data/';
-      window.EJS_startOnLoaded = true;
-
-      // Inject EmulatorJS CDN CSS if not already present
-      if (!document.getElementById('emulatorjs-css')) {
-        const cssLink = document.createElement('link');
-        cssLink.rel = 'stylesheet';
-        cssLink.href = 'https://cdn.emulatorjs.org/stable/data/emulator.min.css';
-        cssLink.id = 'emulatorjs-css';
-        document.head.appendChild(cssLink);
-      }
-      
-      // Load the emulator script
-      await this.loadEmulatorScript();
-      
-      // Wait for the emulator to be ready
-      await new Promise<void>((resolve, reject) => {
-        const timeout = setTimeout(() => {
-          reject(new Error('Emulator initialization timed out'));
-        }, 50000);
-        
-        const checkReady = setInterval(() => {
-          if (window.EJS_emulator) {
-            clearTimeout(timeout);
-            clearInterval(checkReady);
-            this.emulator = window.EJS_emulator;
-            resolve();
-          }
-        }, 100);
-      });
-      
+      const result = await EmulatorManager.initializeEmulator(gamePath, onStarted);
       this.setState('running');
-      return true;
+      return result;
     } catch (error) {
-      console.error('Error initializing emulator:', error);
-      await this.stopEmulator();
       this.setState('error');
       throw error;
     }
@@ -315,39 +125,32 @@ export class GameManager {
       }
       
       // Load game history
-      this.loadGameHistory();
-      
+      const gameHistory = DefaultGameHistoryManager.load();
       const now = Date.now();
       const today = new Date(now).toDateString();
-      
+
       // Check if we have a game set for today
-      const todaysGameId = Object.entries(this.gameHistory).find(
-        ([_, history]) => history.lastPlayed === today
+      const todaysGameId = Object.entries(gameHistory as GameHistoryMap).find(
+        ([_, history]) => (history as GameHistory).lastPlayed === today
       )?.[0];
-      
+
       if (todaysGameId) {
         return games.find(game => game.id === todaysGameId) || games[0];
       }
-      
+
       // If no game for today, find the least recently played game
-      const leastPlayedGame = Object.entries(this.gameHistory).length > 0
-        ? Object.entries(this.gameHistory).sort(
-            (a, b) => a[1].playCount - b[1].playCount || 
-                     a[1].lastPlayedTime - b[1].lastPlayedTime
+      const leastPlayedGame = Object.entries(gameHistory as GameHistoryMap).length > 0
+        ? Object.entries(gameHistory as GameHistoryMap).sort(
+            (a, b) => (a[1] as GameHistory).playCount - (b[1] as GameHistory).playCount || 
+                     (a[1] as GameHistory).lastPlayedTime - (b[1] as GameHistory).lastPlayedTime
           )[0]
         : null;
-      
+
       const nextGameId = leastPlayedGame ? leastPlayedGame[0] : games[0].id;
-      
+
       // Update game history
-      this.gameHistory[nextGameId] = {
-        lastPlayed: today,
-        lastPlayedTime: now,
-        playCount: ((this.gameHistory[nextGameId]?.playCount) || 0) + 1
-      };
-      
-      this.saveGameHistory();
-      
+      DefaultGameHistoryManager.updateGame(nextGameId, today, now);
+
       return games.find(game => game.id === nextGameId) || games[0];
     } catch (error) {
       console.error('Error getting today\'s game:', error);
@@ -355,56 +158,10 @@ export class GameManager {
     }
   }
   
-  // Load game history from localStorage
-  private static loadGameHistory(): void {
-    if (typeof window === 'undefined') return;
-    
-    try {
-      const savedHistory = localStorage.getItem(this.GAME_HISTORY_KEY);
-      if (savedHistory) {
-        this.gameHistory = JSON.parse(savedHistory);
-      }
-    } catch (error) {
-      console.error('Error loading game history:', error);
-      this.gameHistory = {};
-    }
-  }
-  
-  // Save game history to localStorage
-  public static saveGameHistory(): void {
-    if (typeof window === 'undefined') return;
-    
-    try {
-      localStorage.setItem(this.GAME_HISTORY_KEY, JSON.stringify(this.gameHistory));
-      console.log('Game history saved:', this.gameHistory);
-    } catch (error) {
-      console.error('Error saving game history:', error);
-    }
-  }
-  
   // Reset game history (for testing/development)
   public static resetHistory(): void {
-    this.gameHistory = {};
-    if (typeof window !== 'undefined') {
-      localStorage.removeItem(this.GAME_HISTORY_KEY);
-    }
+    DefaultGameHistoryManager.reset();
   }
     
-    /**
-   * Cleans up the emulator container
-   */
-  private static cleanupContainer(): void {
-    if (typeof document === 'undefined') return;
-    
-    const container = document.getElementById('emulatorContainer');
-    if (container) {
-      // Just clear the container; EmulatorJS will create its own canvas
-      container.innerHTML = '';
-    }
-    
-    // Force garbage collection if available
-    if (typeof window !== 'undefined' && (window as any).gc) {
-      (window as any).gc();
-    }
-  }
+
 }

@@ -1,13 +1,12 @@
 import { GameManager } from './utils/gameManager';
 import { GameInfo } from './types/game';
+import { GAMES } from './api/games';
 
 export class App {
     private currentGame: GameInfo | null = null;
     private startButton: HTMLButtonElement | null = null;
-    private loadingIndicator: HTMLElement | null = null;
     private errorDisplay: HTMLElement | null = null;
     private gameTitleElement: HTMLElement | null = null;
-
     private gameMetaElement: HTMLElement | null = null;
 
     async initialize() {
@@ -15,16 +14,24 @@ export class App {
 
         this.cacheElements();
         await this.setupEventListeners();
-        const game = await this.loadGameOfTheDay();
-        const currentGameTitle = document.getElementById('currentGameTitle');
-        if (currentGameTitle && game) {
-            currentGameTitle.textContent = game.name;
+        const currentGamesTitle = document.getElementById('currentGameTitle');
+        this.currentGame = await GameManager.getTodaysGame();
+        if (currentGamesTitle && this.currentGame) {
+            currentGamesTitle.textContent = this.currentGame.name;
+
+            if (GAMES.length > 0) {
+                const gameInfo = GAMES.find(g => g.name === this.currentGame?.name);
+                if (gameInfo) {
+                    this.updateGameInfo(gameInfo);
+                }
+            } else {
+                this.showError('No games available');
+            }
         }
     }
 
     private cacheElements() {
         this.startButton = document.getElementById('startButton') as HTMLButtonElement;
-        this.loadingIndicator = document.getElementById('loadingIndicator');
         this.errorDisplay = document.getElementById('errorDisplay');
         this.gameTitleElement = document.getElementById('gameTitle');
         this.gameMetaElement = document.getElementById('gameMeta');
@@ -33,27 +40,6 @@ export class App {
     private async setupEventListeners() {
         if (this.startButton) {
             this.startButton.addEventListener('click', () => this.startGame());
-        }
-    }
-
-        private async loadGameOfTheDay() {
-        try {
-            this.showLoading(true, 'Loading game...');
-            const game = await GameManager.getTodaysGame();
-            console.log('Game:', game);
-            if (game) {
-                this.currentGame = game;
-                this.updateGameInfo(this.currentGame);
-            } else {
-                this.showError('No games available');
-            }
-            return game;
-        } catch (error) {
-            console.error('Error loading game:', error);
-            this.showError('Failed to load game');
-            return null;
-        } finally {
-            this.showLoading(false);
         }
     }
 
@@ -86,36 +72,18 @@ export class App {
             this.startButton.style.display = 'none';
         }
         const currentGameTitle = document.getElementById('currentGameTitle');
-        if (currentGameTitle && this.currentGame) {
+        if (currentGameTitle) {
             currentGameTitle.textContent = `Playing ${this.currentGame.name}`;
         }
 
         try {
-            this.showLoading(true, 'Starting game...');
-            const success = await GameManager.initializeEmulator(this.currentGame.d64Path);
+            await GameManager.initializeEmulator(this.currentGame.d64Path);
         } catch (error) {
             console.error('Error starting game:', error);
             this.showError('Failed to start game. Please try again.');
-        } finally {
-            this.showLoading(false);
-        }
+        } 
     }
-
-    private showLoading(show: boolean, message?: string) {
-        if (this.loadingIndicator) {
-            const loadingText = this.loadingIndicator.querySelector('p');
-            if (loadingText && message) {
-                loadingText.textContent = message;
-            }
-            
-            if (show) {
-                this.loadingIndicator?.classList.remove('hidden');
-            } else {
-                this.loadingIndicator?.classList.add('hidden');
-            }
-        }
-    }
-
+    
     private showError(message: string) {
         if (this.errorDisplay) {
             this.errorDisplay.textContent = message;
