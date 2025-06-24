@@ -9,9 +9,6 @@ export class LocalGameCatalogStore implements IGameCatalogStore {
   async getAvailableGames(): Promise<GameInfo[]> {
     try {
       const { GAMES } = await import('@/api/games');
-      if (!GAMES || GAMES.length === 0) {
-        return [];
-      }
       return GAMES;
     } catch (error) {
       return [];

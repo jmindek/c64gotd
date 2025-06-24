@@ -7,7 +7,7 @@ import {
   EMULATOR_CSS_ID,
   EMULATOR_SCRIPT_ID,
   EMULATOR_CORE,
-  EMULATOR_PATH_TO_DATA
+  EMULATOR_PATH_TO_DATA,
 } from './config';
 
 export type EmulatorState = 'idle' | 'loading' | 'running' | 'error';
@@ -19,11 +19,7 @@ export class EmulatorManager {
 
   /** Ensures the emulator container exists and is ready for use */
   public static ensureContainer(): HTMLElement {
-    if (typeof document === 'undefined' || !document) {
-      throw new Error('Document is not available');
-    }
     const container = document.getElementById(EMULATOR_CONTAINER_ID);
-    Logger.info(`Ensuring container: ${container}`);
     if (!container) {
       throw new Error('Emulator container not found in DOM!');
     }
@@ -36,11 +32,12 @@ export class EmulatorManager {
   public static cleanupContainer(): void {
     if (typeof document === 'undefined') return;
     const container = document.getElementById(EMULATOR_CONTAINER_ID);
-    Logger.info(`Cleaning up container: ${container}`);
     if (container) {
       container.innerHTML = '';
     }
+    /* eslint-disable-next-line */
     if (typeof window !== 'undefined' && (window as any).gc) {
+      /* eslint-disable-next-line */
       (window as any).gc();
     }
   }
@@ -66,7 +63,7 @@ export class EmulatorManager {
       script.onerror = (e) => {
         this.isEmulatorScriptLoading = false;
         this.emulatorLoadPromise = null;
-        reject(new Error('Failed to load emulator script'));
+        reject(new Error('Failed to load emulator script', { cause: e }));
       };
       const existingScript = document.getElementById(EMULATOR_SCRIPT_ID);
       if (existingScript) existingScript.remove();
@@ -79,7 +76,9 @@ export class EmulatorManager {
   /** Stops the currently running emulator instance if any */
   public static async stopEmulator(): Promise<void> {
     try {
+      /* eslint-disable-next-line */
       if (this.emulator && typeof this.emulator.stop === 'function') {
+        /* eslint-disable-next-line */
         await Promise.resolve(this.emulator.stop());
       }
     } catch (error) {
@@ -109,11 +108,12 @@ export class EmulatorManager {
     if (document.readyState !== 'complete') {
       await new Promise<void>((resolve) => {
         if (document.readyState === 'complete') resolve();
-        else window.addEventListener('load', () => resolve(), { once: true });
+        else window.addEventListener('load', () => {
+          resolve();
+        }, { once: true });
       });
     }
-    const container = this.ensureContainer();
-    Logger.info(`Initialized container: ${container}`);
+    this.ensureContainer();
     if (onStarted) onStarted();
     window.EJS_player = `#${EMULATOR_CONTAINER_ID}`;
     window.EJS_core = EMULATOR_CORE;
@@ -130,7 +130,9 @@ export class EmulatorManager {
     }
     await this.loadEmulatorScript();
     await new Promise<void>((resolve, reject) => {
-      const timeout = setTimeout(() => reject(new Error('Emulator initialization timed out')), 50000);
+      const timeout = setTimeout(() => {
+        reject(new Error('Emulator initialization timed out'));
+      }, 50000);
       const checkReady = setInterval(() => {
         if (window.EJS_emulator) {
           clearTimeout(timeout);

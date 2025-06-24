@@ -19,14 +19,12 @@ interface Window {
   EJS_wasmBinaryFile?: string;
   EJS_wasmBinary?: ArrayBuffer;
   EJS_wasmMemory?: WebAssembly.Memory;
-  EJS_buttons?: {
-    [key: string]: {
+  EJS_buttons?: Record<string, {
       type: 'button' | 'key';
       button?: number;
       key?: string;
       description: string;
-    };
-  };
+    }>;
   EJS_startOnLoaded?: boolean;
   EJS_emulator?: {
     stop: () => void;

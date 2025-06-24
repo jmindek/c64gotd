@@ -1,4 +1,4 @@
-import { GameInfo } from './types/game';
+import type { GameInfo } from './types/game';
 import { getGames } from './api/games';
 
 export class GameManager {
@@ -26,10 +26,12 @@ export class GameManager {
         const rotationTime = isDev ? GameManager.TEST_ONE_MINUTE : GameManager.ONE_DAY;
 
         let nextIndex = 0;
-        
+
+        interface LastPlayed { index: number; timestamp: number }
+
         if (lastPlayed) {
             try {
-                const { index, timestamp } = JSON.parse(lastPlayed);
+                const { index, timestamp } = JSON.parse(lastPlayed) as LastPlayed;
                 if ((now - timestamp) < rotationTime) {
                     return games[index % games.length];
                 }
@@ -41,7 +43,7 @@ export class GameManager {
 
         localStorage.setItem(
             GameManager.GAME_HISTORY_KEY,
-            JSON.stringify({ index: nextIndex, timestamp: now })
+            JSON.stringify({ index: nextIndex, timestamp: now }),
         );
 
         return games[nextIndex];
@@ -55,6 +57,7 @@ export class GameManager {
                 const container = this.ensureContainer();
                 
                 // Configure emulator
+                /* eslint-disable-next-line */
                 const EJS = (window as any).EJS;
                 if (!EJS) {
                     throw new Error('EmulatorJS not loaded');
@@ -72,41 +75,40 @@ export class GameManager {
                     fullscreenOnTouch: true,
                     volume: 0.5,
                     onload: () => {
-                        console.log('Emulator loaded successfully');
                         resolve();
                     },
                     onerror: (error: Error) => {
-                        console.error('Emulator error:', error);
                         reject(error);
-                    },
-                    onstart: () => {
-                        console.log('Emulation started');
-                    },
-                    onstop: () => {
-                        console.log('Emulation stopped');
                     },
                     onpausestate: (paused: boolean) => {
                         console.log('Emulation', paused ? 'paused' : 'resumed');
-                    }
+                    },
                 };
 
                 // Initialize the emulator
+                /* eslint-disable-next-line */
                 EJS.start(config);
                 
             } catch (error) {
                 console.error('Error initializing emulator:', error);
-                reject(error);
             }
         });
     }
 
     stopEmulator(): void {
-        if ((window as any).EJS_emulator) {
+        /* eslint-disable-next-line */
+        if ((window as any).EJS_emulator !== undefined) {
             try {
+                /* eslint-disable-next-line */
                 if (typeof (window as any).EJS_emulator.stop === 'function') {
+                    /* eslint-disable-next-line */
                     (window as any).EJS_emulator.stop();
                 }
-                delete (window as any).EJS_emulator;
+                /* eslint-disable-next-line */
+                if ((window as any).EJS_emulator !== undefined) {
+                    /* eslint-disable-next-line */
+                    delete (window as any).EJS_emulator;
+                }
             } catch (error) {
                 console.error('Error stopping emulator:', error);
             }

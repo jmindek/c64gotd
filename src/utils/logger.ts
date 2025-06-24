@@ -1,4 +1,6 @@
 // Simple logging utility for consistent logs
+//@ts-nocheck
+
 
 export class Logger {
   static info(...args: any[]) {

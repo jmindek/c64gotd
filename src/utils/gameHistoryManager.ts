@@ -1,6 +1,7 @@
 // Handles all game history and localStorage logic
 import { Logger } from './logger';
-import { IGameHistoryStore, LocalGameHistoryStore } from './gameHistoryStore';
+import type { IGameHistoryStore } from './gameHistoryStore';
+import { LocalGameHistoryStore } from './gameHistoryStore';
 
 export interface GameHistory {
   lastPlayed: string;
@@ -46,11 +47,17 @@ export class GameHistoryManager {
 
   /** Update history for a specific game */
   public updateGame(gameId: string, today: string, now: number): void {
-    this.gameHistory[gameId] = {
-      lastPlayed: today,
-      lastPlayedTime: now,
-      playCount: ((this.gameHistory[gameId]?.playCount) || 0) + 1
-    };
+    if (!(gameId in this.gameHistory)) {
+      this.gameHistory[gameId] = {
+        lastPlayed: today,
+        lastPlayedTime: now,
+        playCount: 1,
+      };
+    } else {
+      this.gameHistory[gameId].playCount += 1;
+      this.gameHistory[gameId].lastPlayed = today;
+      this.gameHistory[gameId].lastPlayedTime = now;
+    }
     this.save();
   }
 }

@@ -37,3 +37,5 @@ public/emulatorjs/*.css
 
 # Game ROMs
 public/games/
+
+tsconfig.tsbuildinfo
