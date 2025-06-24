@@ -2,12 +2,11 @@ type EmulatorStatus = 'idle' | 'loading' | 'ready' | 'error' | 'running';
 
 export class C64Emulator {
   private status: EmulatorStatus = 'idle';
-  private gameName: string = '';
+  private gameName = '';
   private onReadyCallback?: () => void;
   private onErrorCallback?: (error: string) => void;
   private onProgressCallback?: (progress: number) => void;
   private gameContainer?: HTMLElement;
-  private romPath: string = '';
 
   constructor(canvas: HTMLCanvasElement) {
     console.log('C64Emulator stub initialized');
@@ -62,7 +61,6 @@ export class C64Emulator {
     } catch (error) {
       this.status = 'error';
       const errorMsg = error instanceof Error ? error.message : 'Failed to load game';
-      console.error('Error loading game:', errorMsg);
       if (this.onErrorCallback) {
         this.onErrorCallback(errorMsg);
       }
@@ -70,7 +68,7 @@ export class C64Emulator {
     }
   }
 
-  public async start(): Promise<void> {
+  public start(): void {
     if (this.status !== 'ready') {
       throw new Error('Cannot start: emulator not ready');
     }
