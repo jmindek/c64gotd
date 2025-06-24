@@ -44,6 +44,7 @@ type StateChangeCallback = (state: GameState) => void;
 import { GameHistoryManager, GameHistory, GameHistoryMap } from './gameHistoryManager';
 
 import { EmulatorManager } from './emulatorManager';
+import { GameCatalog } from './gameCatalog';
 
 export class GameManager {
   private static readonly GAME_HISTORY_KEY = GAME_HISTORY_KEY;
@@ -78,7 +79,6 @@ export class GameManager {
 
   // Get all available games from the imported list
   public static async getAvailableGames(): Promise<GameInfo[]> {
-    const { GameCatalog } = await import('./gameCatalog');
     return GameCatalog.getAvailableGames();
   }
 
