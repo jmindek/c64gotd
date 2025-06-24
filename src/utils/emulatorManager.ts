@@ -19,7 +19,7 @@ export class EmulatorManager {
 
   /** Ensures the emulator container exists and is ready for use */
   public static ensureContainer(): HTMLElement {
-    if (typeof document === 'undefined') {
+    if (typeof document === 'undefined' || !document) {
       throw new Error('Document is not available');
     }
     const container = document.getElementById(EMULATOR_CONTAINER_ID);
