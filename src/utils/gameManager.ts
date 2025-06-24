@@ -40,19 +40,13 @@ declare global {
 type GameState = 'idle' | 'loading' | 'running' | 'error';
 type StateChangeCallback = (state: GameState) => void;
 
-// Game history interface
-interface GameHistory {
-  lastPlayed: string;
-  lastPlayedTime: number;
-  playCount: number;
-}
-
-type GameHistoryMap = Record<string, GameHistory>;
+// Game history management
+import { GameHistoryManager, GameHistory, GameHistoryMap } from './gameHistoryManager';
 
 export class GameManager {
   private static readonly GAME_HISTORY_KEY = GAME_HISTORY_KEY;
   private static readonly GAME_LIST_KEY = GAME_LIST_KEY;
-  private static gameHistory: GameHistoryMap = {};
+  
   private static emulator: any = null;
   private static stateChangeCallbacks: StateChangeCallback[] = [];
   private static currentState: GameState = 'idle';
@@ -326,39 +320,32 @@ export class GameManager {
       }
       
       // Load game history
-      this.loadGameHistory();
-      
+      const gameHistory = GameHistoryManager.load();
       const now = Date.now();
       const today = new Date(now).toDateString();
-      
+
       // Check if we have a game set for today
-      const todaysGameId = Object.entries(this.gameHistory).find(
+      const todaysGameId = Object.entries(gameHistory).find(
         ([_, history]) => history.lastPlayed === today
       )?.[0];
-      
+
       if (todaysGameId) {
         return games.find(game => game.id === todaysGameId) || games[0];
       }
-      
+
       // If no game for today, find the least recently played game
-      const leastPlayedGame = Object.entries(this.gameHistory).length > 0
-        ? Object.entries(this.gameHistory).sort(
+      const leastPlayedGame = Object.entries(gameHistory).length > 0
+        ? Object.entries(gameHistory).sort(
             (a, b) => a[1].playCount - b[1].playCount || 
                      a[1].lastPlayedTime - b[1].lastPlayedTime
           )[0]
         : null;
-      
+
       const nextGameId = leastPlayedGame ? leastPlayedGame[0] : games[0].id;
-      
+
       // Update game history
-      this.gameHistory[nextGameId] = {
-        lastPlayed: today,
-        lastPlayedTime: now,
-        playCount: ((this.gameHistory[nextGameId]?.playCount) || 0) + 1
-      };
-      
-      this.saveGameHistory();
-      
+      GameHistoryManager.updateGame(nextGameId, today, now);
+
       return games.find(game => game.id === nextGameId) || games[0];
     } catch (error) {
       console.error('Error getting today\'s game:', error);
@@ -366,39 +353,9 @@ export class GameManager {
     }
   }
   
-  // Load game history from localStorage
-  private static loadGameHistory(): void {
-    if (typeof window === 'undefined') return;
-    
-    try {
-      const savedHistory = localStorage.getItem(this.GAME_HISTORY_KEY);
-      if (savedHistory) {
-        this.gameHistory = JSON.parse(savedHistory);
-      }
-    } catch (error) {
-      console.error('Error loading game history:', error);
-      this.gameHistory = {};
-    }
-  }
-  
-  // Save game history to localStorage
-  public static saveGameHistory(): void {
-    if (typeof window === 'undefined') return;
-    
-    try {
-      localStorage.setItem(this.GAME_HISTORY_KEY, JSON.stringify(this.gameHistory));
-      console.log('Game history saved:', this.gameHistory);
-    } catch (error) {
-      console.error('Error saving game history:', error);
-    }
-  }
-  
   // Reset game history (for testing/development)
   public static resetHistory(): void {
-    this.gameHistory = {};
-    if (typeof window !== 'undefined') {
-      localStorage.removeItem(this.GAME_HISTORY_KEY);
-    }
+    GameHistoryManager.reset();
   }
     
     /**
