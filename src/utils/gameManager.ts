@@ -78,20 +78,8 @@ export class GameManager {
 
   // Get all available games from the imported list
   public static async getAvailableGames(): Promise<GameInfo[]> {
-    try {
-      // Import the games directly from the API file
-      const { GAMES } = await import('@/api/games');
-      
-      if (!GAMES || GAMES.length === 0) {
-        console.warn('No games found in the games list');
-        return [];
-      }
-      
-      return GAMES;
-    } catch (error) {
-      console.error('Error getting available games:', error);
-      return [];
-    }
+    const { GameCatalog } = await import('./gameCatalog');
+    return GameCatalog.getAvailableGames();
   }
 
   // Emulator lifecycle delegation
@@ -175,21 +163,5 @@ export class GameManager {
     GameHistoryManager.reset();
   }
     
-    /**
-   * Cleans up the emulator container
-   */
-  private static cleanupContainer(): void {
-    if (typeof document === 'undefined') return;
-    
-    const container = document.getElementById(EMULATOR_CONTAINER_ID);
-    if (container) {
-      // Just clear the container; EmulatorJS will create its own canvas
-      container.innerHTML = '';
-    }
-    
-    // Force garbage collection if available
-    if (typeof window !== 'undefined' && (window as any).gc) {
-      (window as any).gc();
-    }
-  }
+
 }
