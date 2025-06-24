@@ -1,5 +1,16 @@
 // Import and re-export the GameInfo type from the types directory
 import type { GameInfo } from '@/types/game';
+import {
+  EMULATOR_CONTAINER_ID,
+  EMULATOR_SCRIPT_URL,
+  EMULATOR_CSS_URL,
+  EMULATOR_CSS_ID,
+  EMULATOR_SCRIPT_ID,
+  EMULATOR_CORE,
+  EMULATOR_PATH_TO_DATA,
+  GAME_HISTORY_KEY,
+  GAME_LIST_KEY
+} from './config';
 
 export type { GameInfo };
 
@@ -39,13 +50,13 @@ interface GameHistory {
 type GameHistoryMap = Record<string, GameHistory>;
 
 export class GameManager {
-  private static readonly GAME_HISTORY_KEY = 'c64gotd_game_history';
-  private static readonly GAME_LIST_KEY = 'c64_games';
+  private static readonly GAME_HISTORY_KEY = GAME_HISTORY_KEY;
+  private static readonly GAME_LIST_KEY = GAME_LIST_KEY;
   private static gameHistory: GameHistoryMap = {};
   private static emulator: any = null;
   private static stateChangeCallbacks: StateChangeCallback[] = [];
   private static currentState: GameState = 'idle';
-  private static readonly EMULATOR_SCRIPT = 'https://cdn.emulatorjs.org/stable/data/loader.js';
+  private static readonly EMULATOR_SCRIPT = EMULATOR_SCRIPT_URL;
   
   // Prevent instantiation
   private constructor() {}
@@ -99,7 +110,7 @@ export class GameManager {
       throw new Error('Document is not available');
     }
 
-    const container = document.getElementById('emulator-container');
+    const container = document.getElementById(EMULATOR_CONTAINER_ID);
     if (!container) {
       throw new Error('Emulator container not found in DOM!');
     }
@@ -205,14 +216,14 @@ export class GameManager {
       };
       
       // Remove any existing script first
-      const existingScript = document.getElementById('emulatorjs-script');
+      const existingScript = document.getElementById(EMULATOR_SCRIPT_ID);
       if (existingScript) {
         console.warn('[EJS] Removing existing emulator script tag before adding new one');
         existingScript.remove();
       }
       
       // Set a unique ID to track the script
-      script.id = 'emulatorjs-script';
+      script.id = EMULATOR_SCRIPT_ID;
       
       document.head.appendChild(script);
       console.log('[EJS] Emulator script tag appended to document head:', script);
@@ -259,17 +270,17 @@ export class GameManager {
       
       // Set up emulator configuration
       window.EJS_player = '#emulator-container';
-      window.EJS_core = 'vice_x64';
+      window.EJS_core = EMULATOR_CORE;
       window.EJS_gameUrl = gamePath;
-      window.EJS_pathtodata = 'https://cdn.emulatorjs.org/stable/data/';
+      window.EJS_pathtodata = EMULATOR_PATH_TO_DATA;
       window.EJS_startOnLoaded = true;
 
       // Inject EmulatorJS CDN CSS if not already present
-      if (!document.getElementById('emulatorjs-css')) {
+      if (!document.getElementById(EMULATOR_CSS_ID)) {
         const cssLink = document.createElement('link');
         cssLink.rel = 'stylesheet';
-        cssLink.href = 'https://cdn.emulatorjs.org/stable/data/emulator.min.css';
-        cssLink.id = 'emulatorjs-css';
+        cssLink.href = EMULATOR_CSS_URL;
+        cssLink.id = EMULATOR_CSS_ID;
         document.head.appendChild(cssLink);
       }
       
@@ -396,7 +407,7 @@ export class GameManager {
   private static cleanupContainer(): void {
     if (typeof document === 'undefined') return;
     
-    const container = document.getElementById('emulatorContainer');
+    const container = document.getElementById(EMULATOR_CONTAINER_ID);
     if (container) {
       // Just clear the container; EmulatorJS will create its own canvas
       container.innerHTML = '';
