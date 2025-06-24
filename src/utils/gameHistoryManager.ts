@@ -1,5 +1,6 @@
 // Handles all game history and localStorage logic
 import { GAME_HISTORY_KEY } from './config';
+import { Logger } from './logger';
 
 export interface GameHistory {
   lastPlayed: string;
@@ -17,11 +18,12 @@ export class GameHistoryManager {
     if (typeof window === 'undefined') return {};
     try {
       const savedHistory = localStorage.getItem(GAME_HISTORY_KEY);
+      Logger.warn(`Loaded game history: ${savedHistory}`);
       if (savedHistory) {
         this.gameHistory = JSON.parse(savedHistory);
       }
     } catch (error) {
-      console.error('Error loading game history:', error);
+      Logger.error('Error loading game history:', error);
       this.gameHistory = {};
     }
     return this.gameHistory;
@@ -32,9 +34,9 @@ export class GameHistoryManager {
     if (typeof window === 'undefined') return;
     try {
       localStorage.setItem(GAME_HISTORY_KEY, JSON.stringify(this.gameHistory));
-      console.log('Game history saved:', this.gameHistory);
+      Logger.info('Game history saved:', this.gameHistory);
     } catch (error) {
-      console.error('Error saving game history:', error);
+      Logger.error('Error saving game history:', error);
     }
   }
 

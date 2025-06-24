@@ -1,4 +1,5 @@
 // Handles emulator script/CSS injection, container setup, and lifecycle
+import { Logger } from './logger';
 import {
   EMULATOR_CONTAINER_ID,
   EMULATOR_SCRIPT_URL,
@@ -22,6 +23,7 @@ export class EmulatorManager {
       throw new Error('Document is not available');
     }
     const container = document.getElementById(EMULATOR_CONTAINER_ID);
+    Logger.info(`Ensuring container: ${container}`);
     if (!container) {
       throw new Error('Emulator container not found in DOM!');
     }
@@ -34,6 +36,7 @@ export class EmulatorManager {
   public static cleanupContainer(): void {
     if (typeof document === 'undefined') return;
     const container = document.getElementById(EMULATOR_CONTAINER_ID);
+    Logger.info(`Cleaning up container: ${container}`);
     if (container) {
       container.innerHTML = '';
     }
@@ -80,7 +83,7 @@ export class EmulatorManager {
         await Promise.resolve(this.emulator.stop());
       }
     } catch (error) {
-      console.error('Error stopping emulator:', error);
+      Logger.error('Error stopping emulator:', error);
       throw error;
     } finally {
       this.emulator = null;
@@ -88,7 +91,7 @@ export class EmulatorManager {
         try {
           delete window.EJS_emulator;
         } catch (e) {
-          console.warn('Error cleaning up emulator state:', e);
+          Logger.warn('Error cleaning up emulator state:', e);
         }
       }
       this.isEmulatorScriptLoading = false;
@@ -110,6 +113,7 @@ export class EmulatorManager {
       });
     }
     const container = this.ensureContainer();
+    Logger.info(`Initialized container: ${container}`);
     if (onStarted) onStarted();
     window.EJS_player = `#${EMULATOR_CONTAINER_ID}`;
     window.EJS_core = EMULATOR_CORE;
