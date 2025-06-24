@@ -1,15 +1,8 @@
 // Import and re-export the GameInfo type from the types directory
 import type { GameInfo } from '@/types/game';
 import {
-  EMULATOR_CONTAINER_ID,
-  EMULATOR_SCRIPT_URL,
-  EMULATOR_CSS_URL,
-  EMULATOR_CSS_ID,
-  EMULATOR_SCRIPT_ID,
-  EMULATOR_CORE,
-  EMULATOR_PATH_TO_DATA,
   GAME_HISTORY_KEY,
-  GAME_LIST_KEY
+  GAME_LIST_KEY,
 } from './config';
 
 export type { GameInfo };
@@ -17,6 +10,7 @@ export type { GameInfo };
 declare global {
   interface Window {
     EJS_emulator?: {
+      /* eslint-disable-next-line */
       [key: string]: any;
       stop: () => void;
     };
@@ -41,21 +35,18 @@ type GameState = 'idle' | 'loading' | 'running' | 'error';
 type StateChangeCallback = (state: GameState) => void;
 
 // Game history management
-import { GameHistoryManager, GameHistory, GameHistoryMap, DefaultGameHistoryManager } from './gameHistoryManager';
+import { DefaultGameHistoryManager } from './gameHistoryManager';
 
 import { EmulatorManager } from './emulatorManager';
-import { GameCatalog, DefaultGameCatalog } from './gameCatalog';
+import { DefaultGameCatalog } from './gameCatalog';
 
 export class GameManager {
   private static readonly GAME_HISTORY_KEY = GAME_HISTORY_KEY;
   private static readonly GAME_LIST_KEY = GAME_LIST_KEY;
-  
+
   private static stateChangeCallbacks: StateChangeCallback[] = [];
   private static currentState: GameState = 'idle';
-  
-  // Prevent instantiation
-  private constructor() {}
-  
+
   // Subscribe to state changes
   public static onStateChange(callback: StateChangeCallback): () => void {
     this.stateChangeCallbacks.push(callback);
@@ -63,15 +54,17 @@ export class GameManager {
       this.stateChangeCallbacks = this.stateChangeCallbacks.filter(cb => cb !== callback);
     };
   }
-  
+
   // Update state and notify subscribers
   private static setState(newState: GameState): void {
     if (this.currentState !== newState) {
       this.currentState = newState;
-      this.stateChangeCallbacks.forEach(callback => callback(newState));
+      this.stateChangeCallbacks.forEach(callback => {
+        callback(newState);
+      });
     }
   }
-  
+
   // Get current state
   public static getState(): GameState {
     return this.currentState;
@@ -123,45 +116,48 @@ export class GameManager {
         console.warn('No games available');
         return null;
       }
-      
+
       // Load game history
       const gameHistory = DefaultGameHistoryManager.load();
       const now = Date.now();
       const today = new Date(now).toDateString();
 
       // Check if we have a game set for today
-      const todaysGameId = Object.entries(gameHistory as GameHistoryMap).find(
-        ([_, history]) => (history as GameHistory).lastPlayed === today
+      const todaysGameId = Object.entries(gameHistory).find(
+        /* eslint-disable-next-line */
+        ([_, history]) => (history).lastPlayed === today,
       )?.[0];
 
       if (todaysGameId) {
+        /* eslint-disable-next-line */
         return games.find(game => game.id === todaysGameId) || games[0];
       }
 
       // If no game for today, find the least recently played game
-      const leastPlayedGame = Object.entries(gameHistory as GameHistoryMap).length > 0
-        ? Object.entries(gameHistory as GameHistoryMap).sort(
-            (a, b) => (a[1] as GameHistory).playCount - (b[1] as GameHistory).playCount || 
-                     (a[1] as GameHistory).lastPlayedTime - (b[1] as GameHistory).lastPlayedTime
-          )[0]
+      const leastPlayedGame = Object.entries(gameHistory).length > 0
+        ? Object.entries(gameHistory).sort(
+          (a, b) => (a[1]).playCount - (b[1]).playCount ||
+                     (a[1]).lastPlayedTime - (b[1]).lastPlayedTime,
+        )[0]
         : null;
 
       const nextGameId = leastPlayedGame ? leastPlayedGame[0] : games[0].id;
 
       // Update game history
+      /* eslint-disable-next-line */
       DefaultGameHistoryManager.updateGame(nextGameId, today, now);
-
+      /* eslint-disable-next-line */
       return games.find(game => game.id === nextGameId) || games[0];
     } catch (error) {
       console.error('Error getting today\'s game:', error);
       return null;
     }
   }
-  
+
   // Reset game history (for testing/development)
   public static resetHistory(): void {
     DefaultGameHistoryManager.reset();
   }
-    
+
 
 }
