@@ -2,42 +2,46 @@ import { GameInfo } from '../types/game';
 
 export const GAMES: GameInfo[] = [
   {
+    id: 'blockheads',
     name: 'Blockheads',
     d64Path: '/games/Blockheads.d64',
     thumbnailPath: '/games/thumbnails/Blockheads.png',
-    description: 'A classic C64 platformer game where you control a character navigating through various levels.',
-    year: 1986,
-    publisher: 'Ocean Software',
+    description: 'Super Meat Boy style speedrun platformer for the Commodore 64.',
+    year: 2022,
+    publisher: 'Carleton Handley',
     genre: 'Platform',
     players: '1'
   },
   {
+    id: 'legacy-of-the-lost-spell', 
     name: 'Legacy of the Lost Spell',
     d64Path: '/games/Legacy of the Lost Spell Preview + [BLZ].d64',
-    thumbnailPath: '/games/thumbnails/Blockheads.png', // Placeholder - add actual thumbnail
+    thumbnailPath: '/games/thumbnails/Legacy of the Lost Spell.png',
     description: 'A preview of an upcoming C64 RPG adventure game with magic and exploration.',
-    year: 2023,
-    publisher: 'Indie Developer',
+    year: 2025,
+    publisher: 'Blazon',
     genre: 'RPG',
     players: '1'
   },
   {
+    id: 'luna',
     name: 'Luna',
     d64Path: '/games/Luna.d64',
-    thumbnailPath: '/games/thumbnails/Blockheads.png', // Placeholder - add actual thumbnail
-    description: 'A space adventure game with puzzle elements set on the moon.',
-    year: 2022,
-    publisher: 'Indie Developer',
-    genre: 'Adventure',
+    thumbnailPath: '/games/thumbnails/Luna.png',
+    description: 'You must guide Luna the witch through a never ending series of caves while avoiding and dispatching of enemies.',
+    year: 2019,
+    publisher: 'Shallan',
+    genre: 'Run n Gun',
     players: '1'
   },
   {
+    id: 'showdown',
     name: 'Showdown',
     d64Path: '/games/showdown.d64',
-    thumbnailPath: '/games/thumbnails/Blockheads.png', // Placeholder - add actual thumbnail
-    description: 'A fast-paced action game with intense battles and challenges.',
-    year: 2023,
-    publisher: 'Indie Developer',
+    thumbnailPath: '/games/thumbnails/Showdown.png',
+    description: 'You play a cowboy out to win a fierce gun duel. The first one to outwit and knock down the opponent 5 times is the winner of the duel.',
+    year: 2020,
+    publisher: 'Badgerpunch Games',
     genre: 'Action',
     players: '1-2'
   }
