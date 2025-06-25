@@ -4,6 +4,7 @@ node_modules/
 # Build output
 dist/
 .next/
+*.pyc
 
 # System files
 .DS_Store
