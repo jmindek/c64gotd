@@ -11,6 +11,7 @@ RUN uv pip install --system --requirement pyproject.toml
 FROM base as prod
 COPY . ./
 EXPOSE 8000
+HEALTHCHECK --interval=10s --timeout=3s --start-period=5s --retries=3 CMD curl --fail http://localhost:8000/health || exit 1
 CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
 
 # Test image

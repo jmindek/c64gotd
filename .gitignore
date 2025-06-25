@@ -39,3 +39,4 @@ public/emulatorjs/*.css
 public/games/
 
 tsconfig.tsbuildinfo
+/backend/__pycache__

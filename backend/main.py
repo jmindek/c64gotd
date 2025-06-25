@@ -1,11 +1,22 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from db import GameDB
 from models import GameInfo
+from slowapi import Limiter, _rate_limit_exceeded_handler
+from slowapi.util import get_remote_address
+from slowapi.errors import RateLimitExceeded
 
 app = FastAPI()
 
+limiter = Limiter(key_func=get_remote_address)
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+
 game_db = GameDB()
+
+@app.get("/health")
+def health():
+    return {"status": "ok"}
 
 app.add_middleware(
     CORSMiddleware,
@@ -16,7 +27,8 @@ app.add_middleware(
 )
 
 @app.get("/game_of_the_day", response_model=GameInfo)
-def get_game_of_the_day():
+@limiter.limit("10/minute")
+def get_game_of_the_day(request: Request):
     try:
         return game_db.get_game_of_the_day()
     except ValueError as e:

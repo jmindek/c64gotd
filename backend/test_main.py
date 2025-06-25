@@ -38,3 +38,13 @@ def test_cors_headers():
     assert response.status_code == 200
     assert response.headers.get("access-control-allow-origin") == "http://localhost:3000"
     assert "GET" in response.headers.get("access-control-allow-methods", "")
+
+def test_game_of_the_day_rate_limit():
+    client = TestClient(app)
+    # Exceed the rate limit (10 per minute)
+    for _ in range(10):
+        response = client.get("/game_of_the_day")
+        assert response.status_code in (200, 404)  # Acceptable responses for the first 10
+    response = client.get("/game_of_the_day")
+    assert response.status_code == 429
+    assert "rate limit" in response.text.lower()
