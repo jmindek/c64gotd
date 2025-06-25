@@ -160,12 +160,28 @@ button:disabled {
   to { transform: rotate(360deg); }
 }
 
-/* Error message */
-.error-message {
-  color: #ff6b6b;
-  margin: 1rem 0;
-  max-width: 500px;
+/* Game container must be positioned relative for overlays */
+.game-container {
+  position: relative;
 }
+
+/* Error toast overlay (centered horizontally, near top) */
+.error-display {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: rgba(220, 38, 38, 0.9);
+  color: white;
+  padding: 0.75rem 1.5rem;
+  border-radius: 4px;
+  z-index: 100;
+  max-width: 90%;
+  text-align: center;
+  transition: all 0.3s ease;
+  pointer-events: none;
+}
+
 
 /* Pulse animation is already defined above */
 

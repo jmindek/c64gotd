@@ -5,8 +5,8 @@ A web application that lets you play a different Commodore 64 game every day.
 ## Features
 
 - Play C64 games directly in your browser
-- Responsive design that works on desktop and mobile
-- Touch controls with virtual joystick
+- Responsive design that works on desktop and mobile (mobile to be verified)
+- Touch controls with virtual joystick (to be verified)
 - Keyboard support for desktop users
 - Clean, modern UI with dark theme
 
@@ -60,7 +60,10 @@ This project is set up for easy containerized development and deployment.
 
 ### Build and start all services
 ```bash
-docker-compose up --build
+// Development
+docker-compose -f docker-compose.yml -f docker-compose.dev.yml up --build
+// Production
+docker-compose -f docker-compose.yml -f docker-compose.prod.yml up --build
 ```
 - Frontend: [http://localhost:3000](http://localhost:3000)
 - Backend: [http://localhost:8000](http://localhost:8000)
@@ -96,24 +99,6 @@ pytest
 
 ---
 
-## Customization
-- See `backend/games_data.py` to add or edit available games.
-- See `backend/main.py` and `backend/db.py` for backend logic.
-- See `src/` for frontend source code.
-
----
-
-## Notes
-- CORS is enabled for local frontend-backend communication.
-- You can tweak Nginx config for SPA routing or API proxying as needed.
-
-## Project Structure
-
-- `src/app/` - Next.js app directory with page and layout components
-- `src/components/` - Reusable React components
-- `src/lib/` - Utility functions and emulator integration
-- `public/` - Static files including game ROMs and emulator files
-
 ## Adding Games
 
 1. Place your C64 game ROMs (`.prg`, `.d64`, etc.) in the `public/games` directory.
@@ -147,6 +132,5 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ## Acknowledgments
 
 - [VICE](https://vice-emu.sourceforge.io/) - The Versatile Commodore Emulator
-- [Next.js](https://nextjs.org/) - The React Framework for Production
 - [Tailwind CSS](https://tailwindcss.com/) - A utility-first CSS framework
 - [EmulatorJS](https://github.com/EmulatorJS/EmulatorJS) - A JavaScript emulation platform
