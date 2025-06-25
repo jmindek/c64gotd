@@ -3,6 +3,7 @@ import type { GameInfo } from '@/types/game';
 import {
   GAME_HISTORY_KEY,
   GAME_LIST_KEY,
+  NOT_FOUND_GAME_NAME,
 } from './config';
 
 export type { GameInfo };
@@ -38,7 +39,6 @@ type StateChangeCallback = (state: GameState) => void;
 import { DefaultGameHistoryManager } from './gameHistoryManager';
 
 import { EmulatorManager } from './emulatorManager';
-import { DefaultGameCatalog } from './gameCatalog';
 
 export class GameManager {
   private static readonly GAME_HISTORY_KEY = GAME_HISTORY_KEY;
@@ -68,11 +68,6 @@ export class GameManager {
   // Get current state
   public static getState(): GameState {
     return this.currentState;
-  }
-
-  // Get all available games from the imported list
-  public static async getAvailableGames(): Promise<GameInfo[]> {
-    return DefaultGameCatalog.getAvailableGames();
   }
 
   // Emulator lifecycle delegation
@@ -106,51 +101,50 @@ export class GameManager {
   }
 
   /**
-   * Get today's featured game
+   * Get today's featured game from the backend
    * @returns Promise that resolves to today's game or null if no games are available
    */
-  public static async getTodaysGame(): Promise<GameInfo | null> {
+  /**
+   * Ensure any input is shaped as a valid GameInfo object.
+   */
+  /* eslint-disable @typescript-eslint/no-unsafe-member-access */
+  /* eslint-disable @typescript-eslint/no-unsafe-assignment */
+  private static normalizeGameInfo(data: any): GameInfo {
+    return {
+      id: typeof data.id === 'string' ? data.id : 'unknown',
+      name: typeof data.name === 'string' ? data.name : 'Unknown Game',
+      d64Path: typeof data.d64Path === 'string' ? data.d64Path : '',
+      thumbnailPath: typeof data.thumbnailPath === 'string' ? data.thumbnailPath : '',
+      description: typeof data.description === 'string' ? data.description : '',
+      year: typeof data.year === 'number' ? data.year : undefined,
+      publisher: typeof data.publisher === 'string' ? data.publisher : undefined,
+      genre: typeof data.genre === 'string' ? data.genre : undefined,
+      players: typeof data.players === 'string' ? data.players : undefined,
+    };
+  }
+  /* eslint-enable @typescript-eslint/no-unsafe-member-access */
+  /* eslint-enable @typescript-eslint/no-unsafe-assignment */
+
+  public static async getTodaysGame(): Promise<GameInfo> {
     try {
-      const games = await this.getAvailableGames();
-      if (games.length === 0) {
-        console.warn('No games available');
-        return null;
-      }
-
-      // Load game history
-      const gameHistory = DefaultGameHistoryManager.load();
-      const now = Date.now();
-      const today = new Date(now).toDateString();
-
-      // Check if we have a game set for today
-      const todaysGameId = Object.entries(gameHistory).find(
-        /* eslint-disable-next-line */
-        ([_, history]) => (history).lastPlayed === today,
-      )?.[0];
-
-      if (todaysGameId) {
-        /* eslint-disable-next-line */
-        return games.find(game => game.id === todaysGameId) || games[0];
-      }
-
-      // If no game for today, find the least recently played game
-      const leastPlayedGame = Object.entries(gameHistory).length > 0
-        ? Object.entries(gameHistory).sort(
-          (a, b) => (a[1]).playCount - (b[1]).playCount ||
-                     (a[1]).lastPlayedTime - (b[1]).lastPlayedTime,
-        )[0]
-        : null;
-
-      const nextGameId = leastPlayedGame ? leastPlayedGame[0] : games[0].id;
-
-      // Update game history
-      /* eslint-disable-next-line */
-      DefaultGameHistoryManager.updateGame(nextGameId, today, now);
-      /* eslint-disable-next-line */
-      return games.find(game => game.id === nextGameId) || games[0];
+      const response = await fetch('/api/game_of_the_day');
+      if (!response.ok) throw new Error('Failed to fetch game of the day from backend');
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+      const data = await response.json();
+      return GameManager.normalizeGameInfo(data);
     } catch (error) {
-      console.error('Error getting today\'s game:', error);
-      return null;
+      console.error('Error fetching today\'s game from backend:', error);
+      return {
+        id: 'not_found',
+        name: NOT_FOUND_GAME_NAME,
+        d64Path: '',
+        thumbnailPath: '',
+        description: 'Game of the day not found.',
+        year: undefined,
+        publisher: undefined,
+        genre: undefined,
+        players: undefined,
+      };
     }
   }
 
@@ -158,6 +152,4 @@ export class GameManager {
   public static resetHistory(): void {
     DefaultGameHistoryManager.reset();
   }
-
-
 }

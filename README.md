@@ -14,30 +14,98 @@ A web application that lets you play a different Commodore 64 game every day.
 
 - Node.js 16.8 or later
 - npm or yarn
+- Docker and Docker Compose (optional)
 
 ## Getting Started
 
-1. **Clone the repository**
-   ```bash
-   git clone https://github.com/yourusername/c64gotd.git
-   cd c64gotd
-   ```
+### 1. Clone the repository
+```bash
+git clone https://github.com/yourusername/c64gotd.git
+cd c64gotd
+```
 
-2. **Install dependencies**
-   ```bash
-   npm install
-   ```
+### 2. Add game ROMs
+Place your C64 game ROMs in the `public/games` directory.
 
-3. **Add game ROMs**
-   Place your C64 game ROMs in the `public/games` directory.
+---
 
-4. **Run the development server**
-   ```bash
-   npm run dev
-   ```
+## Running Locally (Frontend & Backend)
 
-5. **Open your browser**
-   Visit `http://localhost:3000` to see the app in action.
+### Install frontend dependencies
+```bash
+npm install
+```
+
+### Start the frontend (Vite)
+```bash
+npm run dev
+```
+
+- Open your browser at [http://localhost:3000](http://localhost:3000)
+
+### Start the backend (FastAPI)
+```bash
+cd backend
+uv pip install -r pyproject.toml
+uvicorn main:app --reload
+```
+
+- Backend runs at [http://localhost:8000](http://localhost:8000)
+
+---
+
+## Running with Docker Compose
+
+This project is set up for easy containerized development and deployment.
+
+### Build and start all services
+```bash
+docker-compose up --build
+```
+- Frontend: [http://localhost:3000](http://localhost:3000)
+- Backend: [http://localhost:8000](http://localhost:8000)
+
+### Stop all services
+```bash
+docker-compose down
+```
+
+---
+
+## Architecture
+- **Frontend:** Vite (TypeScript), served via Nginx in production container
+- **Backend:** FastAPI (Python 3.13, Pydantic, SQLite, uvicorn)
+- **Development:** Hot reload for both frontend and backend
+- **Production:** Use Docker Compose for full stack
+
+---
+
+## Testing
+
+### Frontend
+```bash
+npm run test
+```
+
+### Backend
+```bash
+cd backend
+uv pip install pytest
+pytest
+```
+
+---
+
+## Customization
+- See `backend/games_data.py` to add or edit available games.
+- See `backend/main.py` and `backend/db.py` for backend logic.
+- See `src/` for frontend source code.
+
+---
+
+## Notes
+- CORS is enabled for local frontend-backend communication.
+- You can tweak Nginx config for SPA routing or API proxying as needed.
 
 ## Project Structure
 

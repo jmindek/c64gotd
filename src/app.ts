@@ -1,9 +1,10 @@
 import { GameManager } from './utils/gameManager';
 import type { GameInfo } from './types/game';
 import { GAMES } from './api/games';
+import { NOT_FOUND_GAME_NAME } from './utils/config';
 
 export class App {
-  private currentGame: GameInfo | null = null;
+  private currentGame: GameInfo = {'id': '', 'name': '', 'd64Path': '', 'thumbnailPath': ''};
   private startButton: HTMLButtonElement | null = null;
   private errorDisplay: HTMLElement | null = null;
   private gameTitleElement: HTMLElement | null = null;
@@ -16,11 +17,11 @@ export class App {
     this.setupEventListeners();
     const currentGamesTitle = document.getElementById('currentGameTitle');
     this.currentGame = await GameManager.getTodaysGame();
-    if (currentGamesTitle && this.currentGame) {
+    if (currentGamesTitle) {
       currentGamesTitle.textContent = this.currentGame.name;
 
       if (GAMES.length > 0) {
-        const gameInfo = GAMES.find(g => g.name === this.currentGame?.name);
+        const gameInfo = GAMES.find(g => g.name === this.currentGame.name);
         if (gameInfo) {
           this.updateGameInfo(gameInfo);
         }
@@ -62,8 +63,8 @@ export class App {
   }
 
   private async startGame() {
-    if (!this.currentGame) {
-      this.showError('No game selected');
+    if (this.currentGame.name === NOT_FOUND_GAME_NAME) {
+      this.showError('No game found to start.');
       return;
     }
 
