@@ -3,6 +3,7 @@ import type { GameInfo } from '@/types/game';
 import {
   GAME_HISTORY_KEY,
   GAME_LIST_KEY,
+  NOT_FOUND_GAME_NAME,
 } from './config';
 
 export type { GameInfo };
@@ -38,7 +39,6 @@ type StateChangeCallback = (state: GameState) => void;
 import { DefaultGameHistoryManager } from './gameHistoryManager';
 
 import { EmulatorManager } from './emulatorManager';
-import { DefaultGameCatalog } from './gameCatalog';
 
 export class GameManager {
   private static readonly GAME_HISTORY_KEY = GAME_HISTORY_KEY;
@@ -68,13 +68,6 @@ export class GameManager {
   // Get current state
   public static getState(): GameState {
     return this.currentState;
-  }
-
-  // Get all available games from the backend API
-  public static async getAvailableGames(): Promise<GameInfo[]> {
-    const response = await fetch('/api/games');
-    if (!response.ok) throw new Error('Failed to fetch games from backend');
-    return response.json();
   }
 
   // Emulator lifecycle delegation
@@ -111,14 +104,47 @@ export class GameManager {
    * Get today's featured game from the backend
    * @returns Promise that resolves to today's game or null if no games are available
    */
-  public static async getTodaysGame(): Promise<GameInfo | null> {
+  /**
+   * Ensure any input is shaped as a valid GameInfo object.
+   */
+  /* eslint-disable @typescript-eslint/no-unsafe-member-access */
+  /* eslint-disable @typescript-eslint/no-unsafe-assignment */
+  private static normalizeGameInfo(data: any): GameInfo {
+    return {
+      id: typeof data.id === 'string' ? data.id : 'unknown',
+      name: typeof data.name === 'string' ? data.name : 'Unknown Game',
+      d64Path: typeof data.d64Path === 'string' ? data.d64Path : '',
+      thumbnailPath: typeof data.thumbnailPath === 'string' ? data.thumbnailPath : '',
+      description: typeof data.description === 'string' ? data.description : '',
+      year: typeof data.year === 'number' ? data.year : undefined,
+      publisher: typeof data.publisher === 'string' ? data.publisher : undefined,
+      genre: typeof data.genre === 'string' ? data.genre : undefined,
+      players: typeof data.players === 'string' ? data.players : undefined,
+    };
+  }
+  /* eslint-enable @typescript-eslint/no-unsafe-member-access */
+  /* eslint-enable @typescript-eslint/no-unsafe-assignment */
+
+  public static async getTodaysGame(): Promise<GameInfo> {
     try {
       const response = await fetch('/api/game_of_the_day');
       if (!response.ok) throw new Error('Failed to fetch game of the day from backend');
-      return await response.json();
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+      const data = await response.json();
+      return GameManager.normalizeGameInfo(data);
     } catch (error) {
-      console.error("Error fetching today's game from backend:", error);
-      return null;
+      console.error('Error fetching today\'s game from backend:', error);
+      return {
+        id: 'not_found',
+        name: NOT_FOUND_GAME_NAME,
+        d64Path: '',
+        thumbnailPath: '',
+        description: 'Game of the day not found.',
+        year: undefined,
+        publisher: undefined,
+        genre: undefined,
+        players: undefined,
+      };
     }
   }
 
@@ -126,6 +152,4 @@ export class GameManager {
   public static resetHistory(): void {
     DefaultGameHistoryManager.reset();
   }
-
-
 }
