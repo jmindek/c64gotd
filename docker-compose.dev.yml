@@ -24,6 +24,8 @@ services:
       dockerfile: Dockerfile
     ports:
       - "3000:80"
+    volumes:
+      - .:/app
     depends_on:
       backend:
         condition: service_healthy

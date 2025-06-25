@@ -26,7 +26,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-@app.get("/game_of_the_day", response_model=GameInfo)
+@app.get("/api/game_of_the_day", response_model=GameInfo)
 @limiter.limit("10/minute")
 def get_game_of_the_day(request: Request):
     try:

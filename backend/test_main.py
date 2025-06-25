@@ -4,7 +4,7 @@ from models import GameInfo
 
 def test_game_of_the_day_success():
     client = TestClient(app)
-    response = client.get("/game_of_the_day")
+    response = client.get("/api/game_of_the_day")
     assert response.status_code == 200
     data = response.json()
     # Check that all required fields are present
@@ -21,7 +21,7 @@ def test_game_of_the_day_not_found(monkeypatch):
         raise ValueError("No games found")
     monkeypatch.setattr(game_db, "get_game_of_the_day", raise_value_error)
     client = TestClient(app)
-    response = client.get("/game_of_the_day")
+    response = client.get("/api/game_of_the_day")
     assert response.status_code == 404
     assert response.json()["detail"] == "No games found"
 
@@ -29,7 +29,7 @@ def test_cors_headers():
     client = TestClient(app)
     # Simulate a browser preflight request
     response = client.options(
-        "/game_of_the_day",
+        "/api/game_of_the_day",
         headers={
             "Origin": "http://localhost:3000",
             "Access-Control-Request-Method": "GET",
@@ -41,10 +41,12 @@ def test_cors_headers():
 
 def test_game_of_the_day_rate_limit():
     client = TestClient(app)
+    # Reset the limiter state for a clean test
+    app.state.limiter.reset()
     # Exceed the rate limit (10 per minute)
     for _ in range(10):
-        response = client.get("/game_of_the_day")
+        response = client.get("/api/game_of_the_day")
         assert response.status_code in (200, 404)  # Acceptable responses for the first 10
-    response = client.get("/game_of_the_day")
+    response = client.get("/api/game_of_the_day")
     assert response.status_code == 429
     assert "rate limit" in response.text.lower()

@@ -70,9 +70,11 @@ export class GameManager {
     return this.currentState;
   }
 
-  // Get all available games from the imported list
+  // Get all available games from the backend API
   public static async getAvailableGames(): Promise<GameInfo[]> {
-    return DefaultGameCatalog.getAvailableGames();
+    const response = await fetch('/api/games');
+    if (!response.ok) throw new Error('Failed to fetch games from backend');
+    return response.json();
   }
 
   // Emulator lifecycle delegation
@@ -106,50 +108,16 @@ export class GameManager {
   }
 
   /**
-   * Get today's featured game
+   * Get today's featured game from the backend
    * @returns Promise that resolves to today's game or null if no games are available
    */
   public static async getTodaysGame(): Promise<GameInfo | null> {
     try {
-      const games = await this.getAvailableGames();
-      if (games.length === 0) {
-        console.warn('No games available');
-        return null;
-      }
-
-      // Load game history
-      const gameHistory = DefaultGameHistoryManager.load();
-      const now = Date.now();
-      const today = new Date(now).toDateString();
-
-      // Check if we have a game set for today
-      const todaysGameId = Object.entries(gameHistory).find(
-        /* eslint-disable-next-line */
-        ([_, history]) => (history).lastPlayed === today,
-      )?.[0];
-
-      if (todaysGameId) {
-        /* eslint-disable-next-line */
-        return games.find(game => game.id === todaysGameId) || games[0];
-      }
-
-      // If no game for today, find the least recently played game
-      const leastPlayedGame = Object.entries(gameHistory).length > 0
-        ? Object.entries(gameHistory).sort(
-          (a, b) => (a[1]).playCount - (b[1]).playCount ||
-                     (a[1]).lastPlayedTime - (b[1]).lastPlayedTime,
-        )[0]
-        : null;
-
-      const nextGameId = leastPlayedGame ? leastPlayedGame[0] : games[0].id;
-
-      // Update game history
-      /* eslint-disable-next-line */
-      DefaultGameHistoryManager.updateGame(nextGameId, today, now);
-      /* eslint-disable-next-line */
-      return games.find(game => game.id === nextGameId) || games[0];
+      const response = await fetch('/api/game_of_the_day');
+      if (!response.ok) throw new Error('Failed to fetch game of the day from backend');
+      return await response.json();
     } catch (error) {
-      console.error('Error getting today\'s game:', error);
+      console.error("Error fetching today's game from backend:", error);
       return null;
     }
   }
