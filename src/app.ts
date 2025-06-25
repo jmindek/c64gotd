@@ -17,6 +17,9 @@ export class App {
     this.setupEventListeners();
     const currentGamesTitle = document.getElementById('currentGameTitle');
     this.currentGame = await GameManager.getTodaysGame();
+    if (this.currentGame.name === NOT_FOUND_GAME_NAME) {
+      this.showError(this.currentGame.description || 'Could not load game of the day.');
+    }
     if (currentGamesTitle) {
       currentGamesTitle.textContent = this.currentGame.name;
 

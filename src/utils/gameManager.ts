@@ -125,21 +125,49 @@ export class GameManager {
   /* eslint-enable @typescript-eslint/no-unsafe-member-access */
   /* eslint-enable @typescript-eslint/no-unsafe-assignment */
 
+  /**
+   * Fetch with a timeout using AbortController
+   */
+  private static async fetchWithTimeout(
+    url: string,
+    options: RequestInit = {},
+    timeoutMs = 2000,
+  ): Promise<Response> {
+    const controller = new AbortController();
+    const fetchPromise = fetch(url, { ...options, signal: controller.signal });
+    const timeoutPromise = new Promise<Response>((_, reject) =>
+      setTimeout(() => {
+        controller.abort();
+        reject(new Error('Timeout'));
+      }, timeoutMs),
+    );
+    try {
+      return await Promise.race([fetchPromise, timeoutPromise]);
+    } finally {
+      // Clear any remaining timeouts if fetch wins the race
+    }
+  }
+
   public static async getTodaysGame(): Promise<GameInfo> {
     try {
-      const response = await fetch('/api/game_of_the_day');
+      const response = await GameManager.fetchWithTimeout('/api/game_of_the_day', {}, 2000);
       if (!response.ok) throw new Error('Failed to fetch game of the day from backend');
       // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
       const data = await response.json();
       return GameManager.normalizeGameInfo(data);
-    } catch (error) {
+    } catch (error: any) {
+      let description = 'Game of the day not found.';
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+      if (error && error.name === 'AbortError') {
+        description = 'Request for game of the day timed out.';
+      }
       console.error('Error fetching today\'s game from backend:', error);
       return {
         id: 'not_found',
         name: NOT_FOUND_GAME_NAME,
         d64Path: '',
         thumbnailPath: '',
-        description: 'Game of the day not found.',
+        description,
         year: undefined,
         publisher: undefined,
         genre: undefined,
