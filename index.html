@@ -41,7 +41,50 @@
                 <span>SPACE TO FIRE</span>
                 <span>ENTER TO START</span>
             </p>
+            <div class="star-rating" id="starRating">
+                <span class="star" data-value="1">&#9733;</span>
+                <span class="star" data-value="2">&#9733;</span>
+                <span class="star" data-value="3">&#9733;</span>
+                <span class="star" data-value="4">&#9733;</span>
+                <span class="star" data-value="5">&#9733;</span>
+            </div>
+            <div id="averageRatingContainer" class="average-rating">
+                <span id="averageRating">Average rating: 0 stars</span>
+            </div>
         </div>
+        <style>
+        .star-rating {
+            display: flex;
+            flex-direction: row;
+            justify-content: center;
+            align-items: center;
+            font-size: 2rem;
+            margin: 0.5em 0 0.2em 0;
+            width: 100%;
+        }
+        .star {
+            cursor: pointer;
+            color: #ccc;
+            transition: color 0.2s;
+            user-select: none;
+        }
+        .star.selected,
+        .star.filled {
+            color: #FFD600;
+            text-shadow: 0 0 2px #FFD600, 0 0 8px #fff9c4;
+        }
+        .average-rating {
+            font-size: 1rem;
+            color: #FFD600;
+            margin-top: 0.2em;
+            margin-bottom: 0.5em;
+            display: flex;
+            flex-direction: row;
+            justify-content: center;
+            align-items: center;
+            width: 100%;
+        }
+        </style>
     </div>
 
     <!-- Load our application script -->

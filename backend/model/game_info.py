@@ -1,7 +1,7 @@
 from pydantic import BaseModel
 
 class GameInfo(BaseModel):
-    id: str
+    id: int
     name: str
     d64Path: str
     thumbnailPath: str
