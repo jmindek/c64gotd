@@ -1,23 +1,40 @@
-from fastapi import FastAPI, HTTPException, Request
+"""
+Main FastAPI application for C64 Game of the Day backend.
+Handles API setup, middleware, dependency injection, and endpoints.
+"""
+
+# --- Standard library imports ---
+from contextlib import asynccontextmanager
+
+# --- Third-party imports ---
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
-from db import GameDB
-from models import GameInfo
-from slowapi import Limiter, _rate_limit_exceeded_handler
-from slowapi.util import get_remote_address
+from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
+from utils.limiter import limiter
 
-app = FastAPI()
+# --- Local imports ---
+from db import get_game_db
+from api.ratings import router as ratings_router
+from utils.ratings import setup_ratings
+from api.games import router as games_router
 
-limiter = Limiter(key_func=get_remote_address)
+# --- App and lifespan setup ---
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    print("[startup_event] Starting up...")
+    db = get_game_db()
+    db.populate_with_games_data()
+    db.create_ratings_table()
+    yield
+
+app = FastAPI(lifespan=lifespan)
+
+# --- Middleware, routers, and exception handlers ---
 app.state.limiter = limiter
 app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
-
-game_db = GameDB()
-
-@app.get("/health")
-def health():
-    return {"status": "ok"}
-
+app.include_router(ratings_router)
+app.include_router(games_router)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["http://localhost:3000"],
@@ -26,10 +43,8 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-@app.get("/api/game_of_the_day", response_model=GameInfo)
-@limiter.limit("10/minute")
-def get_game_of_the_day(request: Request):
-    try:
-        return game_db.get_game_of_the_day()
-    except ValueError as e:
-        raise HTTPException(status_code=404, detail=str(e))
+# --- Endpoints ---
+@app.get("/health")
+def health():
+    return {"status": "ok"}
+

@@ -1,1 +1,0 @@
-export { GameManager } from '../gameManager';

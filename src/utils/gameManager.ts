@@ -111,7 +111,7 @@ export class GameManager {
   /* eslint-disable @typescript-eslint/no-unsafe-assignment */
   private static normalizeGameInfo(data: any): GameInfo {
     return {
-      id: typeof data.id === 'string' ? data.id : 'unknown',
+      id: typeof data.id === 'number' ? data.id : 'unknown',
       name: typeof data.name === 'string' ? data.name : 'Unknown Game',
       d64Path: typeof data.d64Path === 'string' ? data.d64Path : '',
       thumbnailPath: typeof data.thumbnailPath === 'string' ? data.thumbnailPath : '',
@@ -125,32 +125,10 @@ export class GameManager {
   /* eslint-enable @typescript-eslint/no-unsafe-member-access */
   /* eslint-enable @typescript-eslint/no-unsafe-assignment */
 
-  /**
-   * Fetch with a timeout using AbortController
-   */
-  private static async fetchWithTimeout(
-    url: string,
-    options: RequestInit = {},
-    timeoutMs = 2000,
-  ): Promise<Response> {
-    const controller = new AbortController();
-    const fetchPromise = fetch(url, { ...options, signal: controller.signal });
-    const timeoutPromise = new Promise<Response>((_, reject) =>
-      setTimeout(() => {
-        controller.abort();
-        reject(new Error('Timeout'));
-      }, timeoutMs),
-    );
-    try {
-      return await Promise.race([fetchPromise, timeoutPromise]);
-    } finally {
-      // Clear any remaining timeouts if fetch wins the race
-    }
-  }
-
   public static async getTodaysGame(): Promise<GameInfo> {
     try {
-      const response = await GameManager.fetchWithTimeout('/api/game_of_the_day', {}, 2000);
+      const { fetchWithTimeout } = await import('../utils/index');
+      const response = await fetchWithTimeout('/api/game_of_the_day', {}, 2000);
       if (!response.ok) throw new Error('Failed to fetch game of the day from backend');
       // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
       const data = await response.json();
@@ -163,7 +141,7 @@ export class GameManager {
       }
       console.error('Error fetching today\'s game from backend:', error);
       return {
-        id: 'not_found',
+        id: -1,
         name: NOT_FOUND_GAME_NAME,
         d64Path: '',
         thumbnailPath: '',

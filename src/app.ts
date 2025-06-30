@@ -1,17 +1,22 @@
 import { GameManager } from './utils/gameManager';
 import type { GameInfo } from './types/game';
-import { GAMES } from './api/games';
 import { NOT_FOUND_GAME_NAME } from './utils/config';
 
+import { getOrCreateUserId } from './utils/user';
+
 export class App {
-  private currentGame: GameInfo = {'id': '', 'name': '', 'd64Path': '', 'thumbnailPath': ''};
+  private currentGame: GameInfo = {'id': -1, 'name': '', 'd64Path': '', 'thumbnailPath': ''};
   private startButton: HTMLButtonElement | null = null;
   private errorDisplay: HTMLElement | null = null;
   private gameTitleElement: HTMLElement | null = null;
   private gameMetaElement: HTMLElement | null = null;
+  private userId = '';
 
   async initialize() {
     import('./app/globals.css');
+
+    // Assign or fetch persistent user ID
+    this.userId = getOrCreateUserId();
 
     this.cacheElements();
     this.setupEventListeners();
@@ -22,17 +27,20 @@ export class App {
     }
     if (currentGamesTitle) {
       currentGamesTitle.textContent = this.currentGame.name;
+      this.updateGameInfo(this.currentGame);
+    }
 
-      if (GAMES.length > 0) {
-        const gameInfo = GAMES.find(g => g.name === this.currentGame.name);
-        if (gameInfo) {
-          this.updateGameInfo(gameInfo);
-        }
-      } else {
-        this.showError('No games available');
-      }
+    // --- STAR RATING FEATURE ---
+    const starContainer = document.getElementById('starRating');
+    if (starContainer && this.currentGame.id) {
+      // Dynamically import to avoid circular deps
+      const { StarRating } = await import('./components/StarRating');
+      console.log('Current game id:', this.currentGame.id);
+      new StarRating(starContainer, { gameId: this.currentGame.id, userId: this.userId });
     }
   }
+
+
 
   private cacheElements() {
     this.startButton = document.getElementById('startButton') as HTMLButtonElement;
