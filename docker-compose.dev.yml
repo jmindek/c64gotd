@@ -1,5 +1,37 @@
 version: '3.9'
 services:
+  localstack:
+    image: localstack/localstack:latest
+    ports:
+      - "4566:4566"
+    environment:
+      - SERVICES=s3
+      - DEBUG=1
+    volumes:
+      - ./localstack-data:/var/lib/localstack
+
+  s3-uploader:
+    image: amazon/aws-cli:2.15.35
+    depends_on:
+      - localstack
+    volumes:
+      - ./games:/games
+      - ./scripts:/scripts:ro
+      - ./backend/.env.dev:/backend/.env.dev:ro
+      - ./scripts/s3-cors.json:/scripts/s3-cors.json:ro
+    environment:
+      - AWS_ACCESS_KEY_ID=test
+      - AWS_SECRET_ACCESS_KEY=test
+      - AWS_DEFAULT_REGION=us-east-1
+      - S3_ENDPOINT_URL=http://localstack:4566
+      - S3_BUCKET_NAME=c64gotd-local
+    entrypoint: ["/bin/sh", "-c", "ls -l /games && sleep 2 && /scripts/upload-games-to-localstack.sh"]
+
+  games-debugger:
+    image: amazon/aws-cli:2.15.35
+    volumes:
+      - ./games:/games:ro
+    entrypoint: ["/bin/sh", "-c", "ls -l /games && ls -l /"]
   backend:
     build:
       context: ./backend
@@ -21,12 +53,12 @@ services:
 
   frontend:
     build:
-      context: .
+      context: ./frontend
       dockerfile: Dockerfile
     ports:
       - "3000:80"
     volumes:
-      - .:/app
+      - ./frontend:/app
     depends_on:
       backend:
         condition: service_healthy
@@ -35,7 +67,7 @@ services:
     image: node:20-alpine
     working_dir: /app
     volumes:
-      - ./:/app
+      - ./frontend:/app
     command: ["npm", "run", "test"]
 
   test-backend:

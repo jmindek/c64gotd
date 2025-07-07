@@ -4,10 +4,11 @@ WORKDIR /app
 COPY package*.json ./
 COPY vite.config.ts ./
 COPY tsconfig.json ./
+COPY .env.dev ./
 COPY index.html ./
 COPY ./src ./src
 COPY ./public ./public
-RUN npm ci && npm run build
+RUN npm ci && npm run build -- --mode dev
 
 FROM nginx:alpine
 WORKDIR /usr/share/nginx/html
