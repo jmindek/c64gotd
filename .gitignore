@@ -48,3 +48,6 @@ tsconfig.tsbuildinfo
 /frontend/public/emulatorjs/emulators
 /frontend/public/emulatorjs/*.js
 /frontend/public/emulatorjs/*.css
+
+terraform/.terraform
+terraform/terraform.tfstate.backup
