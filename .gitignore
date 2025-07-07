@@ -39,4 +39,12 @@ public/emulatorjs/*.css
 public/games/
 
 tsconfig.tsbuildinfo
-/backend/__pycache__/
+/backend/**/__pycache__/
+
+/frontend/node_modules
+/frontend/dist
+/frontend/public/emulatorjs/data
+/frontend/public/emulatorjs/cores
+/frontend/public/emulatorjs/emulators
+/frontend/public/emulatorjs/*.js
+/frontend/public/emulatorjs/*.css
