@@ -10,7 +10,7 @@
     "preview": "vite preview",
     "test": "jest",
     "test:watch": "jest --watch",
-    "lint": "eslint . --max-warnings=10 --ext .ts,.tsx,.js,.jsx"
+    "lint": "eslint . --max-warnings=0 --ext .ts,.tsx,.js,.jsx"
   },
   "dependencies": {
     "@emulatorjs/core-vice_x64": "^4.2.2",
