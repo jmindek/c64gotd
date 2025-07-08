@@ -56,4 +56,4 @@ jobs:
         run: uv pip install --system --requirement pyproject.toml
 
       - name: Run backend tests
-        run: pytest
+        run: uv run test
