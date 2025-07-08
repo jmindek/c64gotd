@@ -2,7 +2,7 @@
 name = "c64gotd-backend"
 version = "0.1.0"
 description = "Backend API for C64 Game of the Day using FastAPI, Pydantic, and SQLite."
-requires-python = ">=3.13"
+requires-python = ">=3.12"
 dependencies = [
     "fastapi>=0.111.0",
     "pydantic>=2.7.1",
