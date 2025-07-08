@@ -1,0 +1,10 @@
+src/utils/logger.ts
+vite-env.d.ts
+vite.config.ts
+public/emulatorjs/*
+dist/*
+tailwind.config.js
+jest.setup.js
+scripts/generate-thumbnails.js
+__tests__/*
+public/**/*.js

@@ -26,10 +26,7 @@ interface Window {
       description: string;
     }>;
   EJS_startOnLoaded?: boolean;
-  EJS_emulator?: {
-    stop: () => void;
-    [key: string]: any;
-  };
+  EJS_emulator?: import('./emulator-shared').EmulatorInstance;
   EJS?: new (elementId: string, options: any) => any;
   EJS_coreModule?: any;
   EJS_onStart?: () => void;

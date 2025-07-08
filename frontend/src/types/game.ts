@@ -3,6 +3,8 @@ export interface GameInfo {
     name: string;
     d64Path: string;
     thumbnailPath: string;
+    d64Url?: string;
+    thumbnailUrl?: string;
     description?: string;
     year?: number;
     publisher?: string;

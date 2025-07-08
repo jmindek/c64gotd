@@ -1,7 +1,7 @@
 import { GameManager } from './utils/gameManager';
 import type { GameInfo } from './types/game';
 import { NOT_FOUND_GAME_NAME } from './utils/config';
-
+import { getGameUrl } from './utils/getGameUrl';
 import { getOrCreateUserId } from './utils/user';
 
 export class App {
@@ -89,7 +89,11 @@ export class App {
     }
 
     try {
-      await GameManager.initializeEmulator(this.currentGame.d64Path);
+      // Use signed S3 URL if available
+      
+      const gameUrl = this.currentGame.d64Url || getGameUrl(this.currentGame.d64Path);
+      
+      await GameManager.initializeEmulator(gameUrl);
     } catch (error) {
       console.error('Error starting game:', error);
       this.showError('Failed to start game. Please try again.');

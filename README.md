@@ -2,6 +2,13 @@
 
 A web application that lets you play a different Commodore 64 game every day.
 
+## Deployment Overview
+
+- **Production:** Deploys to AWS using CloudFront (for static frontend) and ECS (for backend API/services). S3 is used for game asset storage and CloudFront distribution.
+- **Local Development:** Uses Docker Compose for all services, with LocalStack emulating AWS S3 for local game asset storage. The frontend and backend run in containers for a consistent local environment.
+- **Game ROMs:** Game files are **not provided** in this repository. You must supply your own C64 game ROMs to use the application.
+
+
 ## Features
 
 - Play C64 games directly in your browser
@@ -14,18 +21,16 @@ A web application that lets you play a different Commodore 64 game every day.
 
 - Node.js 16.8 or later
 - npm or yarn
-- Docker and Docker Compose (optional)
+- Docker and Docker Compose
 
 ## Getting Started
 
 ### 1. Clone the repository
-```bash
-git clone https://github.com/yourusername/c64gotd.git
-cd c64gotd
-```
 
 ### 2. Add game ROMs
-Place your C64 game ROMs in the `public/games` directory.
+
+- **Local development:** Place ROMs in the `games/` directory at the project root. These will be uploaded to the local S3 bucket in LocalStack on startup.
+- **Production:** Upload ROMs to your configured AWS S3 bucket as required by your deployment.
 
 ---
 
@@ -33,11 +38,13 @@ Place your C64 game ROMs in the `public/games` directory.
 
 ### Install frontend dependencies
 ```bash
+cd frontend
 npm install
 ```
 
 ### Start the frontend (Vite)
 ```bash
+# for frontend only development with hot reload 
 npm run dev
 ```
 
@@ -76,10 +83,11 @@ docker-compose down
 ---
 
 ## Architecture
-- **Frontend:** Vite (TypeScript), served via Nginx in production container
+- **Frontend:** Vite (TypeScript), served via AWS CloudFront (with Route53 for DNS)
+- **Backend:** FastAPI (Python 3.13, Pydantic, SQLite, uvicorn), routed via AWS Application Load Balancer (ALB)
 - **Backend:** FastAPI (Python 3.13, Pydantic, SQLite, uvicorn)
-- **Development:** Hot reload for both frontend and backend
-- **Production:** Use Docker Compose for full stack
+- **Development:** Hot reload for both frontend and backend, with Docker Compose orchestrating all services and LocalStack emulating AWS S3.
+- **Production:** Deploys to AWS CloudFront (frontend), ECS (backend), and S3 (game assets).
 
 ---
 
@@ -87,14 +95,12 @@ docker-compose down
 
 ### Frontend
 ```bash
-npm run test
+docker-compose -f docker-compose.yml -f docker-compose.dev.yml run test-frontend
 ```
 
 ### Backend
 ```bash
-cd backend
-uv pip install pytest
-pytest
+docker-compose -f docker-compose.yml -f docker-compose.dev.yml run test-backend
 ```
 
 ---
@@ -102,28 +108,7 @@ pytest
 ## Adding Games
 
 1. Place your C64 game ROMs (`.prg`, `.d64`, etc.) in the `public/games` directory.
-2. Update the game list in `src/lib/games.ts` with the game details.
-
-## Keyboard Controls
-
-- Arrow Keys: Move
-- Left Ctrl / Right Ctrl: Fire button
-- Space: Jump/Secondary action
-- Enter: Start game
-- Escape: Pause/Open menu
-
-## Mobile Controls
-
-- Touch the screen to show the virtual joystick
-- Move your finger around the joystick to move
-- Tap the fire button to shoot
-
-## Building for Production
-
-```bash
-npm run build
-npm start
-```
+2. The game list is managed by the backend. To add or update games, edit `backend/games_data.py` (or update the backend database if using one in production).
 
 ## License
 

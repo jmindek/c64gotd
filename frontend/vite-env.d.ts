@@ -4,6 +4,7 @@ declare const __APP_VERSION__: string;
 
 interface ImportMetaEnv {
   readonly VITE_APP_TITLE: string;
+  readonly VITE_GAMES_BASE_URL: string; // S3 asset base URL for games
   // Add other environment variables here
 }
 
