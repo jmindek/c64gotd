@@ -56,4 +56,6 @@ jobs:
         run: uv sync --all-extras --dev
 
       - name: Run tests
-        run: uv run test
+        run: |
+          export PYTHONPATH=/home/runner/work/c64gotd/c64gotd/backend:$PYTHONPATH
+          uv run python -m pytest tests/
