@@ -53,7 +53,7 @@ jobs:
         run: pip install uv
 
       - name: Install dependencies
-        run: uv pip install -r requirements.txt
+        run: uv pip install --system --requirement pyproject.toml
 
       - name: Run backend tests
         run: pytest
