@@ -1,7 +1,10 @@
 resource "aws_launch_template" "ecs" {
+  tags = {
+    Project = "c64gotd"
+  }
   name_prefix   = "${var.app_name}-ecs-"
   image_id      = data.aws_ami.ecs.id
-  instance_type = "t3.small"
+  instance_type = "t3.micro"
   iam_instance_profile {
     name = aws_iam_instance_profile.ecs_instance.name
   }

@@ -7,6 +7,9 @@ resource "aws_cloudfront_origin_access_control" "frontend_s3_oac" {
 }
 
 resource "aws_cloudfront_distribution" "frontend" {
+  tags = {
+    Project = "c64gotd"
+  }
   enabled             = true
   default_root_object = "index.html"
 
