@@ -3,6 +3,9 @@ resource "aws_ecs_cluster" "main" {
 }
 
 resource "aws_ecs_task_definition" "app" {
+  tags = {
+    Project = "c64gotd"
+  }
   family                   = "${var.app_name}-task"
   network_mode             = "bridge"
   requires_compatibilities = ["EC2"]

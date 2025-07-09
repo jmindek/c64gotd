@@ -4,6 +4,7 @@ resource "aws_s3_bucket" "games" {
   tags = {
     Name        = "${var.app_name}-games-storage"
     Environment = "dev"
+    Project     = "c64gotd"
   }
 }
 
@@ -46,12 +47,13 @@ resource "aws_s3_bucket_cors_configuration" "games" {
 }
 
 resource "aws_s3_bucket" "frontend" {
-  bucket = "c64gotd-frontend-478993292699"
-  force_destroy = false
   tags = {
     Name        = "c64gotd-frontend-478993292699"
     Environment = "prod"
+    Project     = "c64gotd"
   }
+  bucket = "c64gotd-frontend-478993292699"
+  force_destroy = false
 }
 
 resource "aws_s3_bucket_public_access_block" "frontend" {
