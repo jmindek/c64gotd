@@ -30,6 +30,14 @@ resource "aws_s3_bucket_policy" "games" {
 }
 
 
+resource "aws_s3_bucket_public_access_block" "games" {
+  bucket = aws_s3_bucket.games.id
+  block_public_acls       = true
+  block_public_policy     = true
+  ignore_public_acls      = true
+  restrict_public_buckets = true
+}
+
 resource "aws_s3_bucket_cors_configuration" "games" {
   bucket = aws_s3_bucket.games.id
 
