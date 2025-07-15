@@ -8,6 +8,9 @@ import {
   EMULATOR_SCRIPT_ID,
   EMULATOR_CORE,
   EMULATOR_PATH_TO_DATA,
+  DEFAULT_CONTROLS,
+  DEFAULT_OPTIONS,
+  DEFAULT_BUTTONS,
 } from './config';
 
 export type EmulatorState = 'idle' | 'loading' | 'running' | 'error';
@@ -120,6 +123,12 @@ export class EmulatorManager {
     window.EJS_gameUrl = gamePath;
     window.EJS_pathtodata = EMULATOR_PATH_TO_DATA;
     window.EJS_startOnLoaded = true;
+    
+    // Set default controls and options (must be set before script load)
+    window.EJS_defaultControls = DEFAULT_CONTROLS;
+    window.EJS_defaultOptions = DEFAULT_OPTIONS;
+    window.EJS_Buttons = DEFAULT_BUTTONS;
+
     // Inject CSS if not present
     if (!document.getElementById(EMULATOR_CSS_ID)) {
       const cssLink = document.createElement('link');
