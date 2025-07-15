@@ -18,121 +18,121 @@ export const DEFAULT_CONTROLS = {
     // D-pad mappings
     0: {
       'value': 'space',
-      'value2': 'BUTTON_2'
+      'value2': 'BUTTON_2',
     },
     1: {
         'value': 's',
-        'value2': 'BUTTON_4'
+        'value2': 'BUTTON_4',
     },
     2: {
         'value': 'v',
-        'value2': 'SELECT'
+        'value2': 'SELECT',
     },
     3: {
         'value': 'enter',
-        'value2': 'START'
+        'value2': 'START',
     },
     4: {
         'value': 'up arrow',
-        'value2': 'DPAD_UP'
+        'value2': 'DPAD_UP',
     },
     5: {
         'value': 'down arrow',
-        'value2': 'DPAD_DOWN'
+        'value2': 'DPAD_DOWN',
     },
     6: {
         'value': 'left arrow',
-        'value2': 'DPAD_LEFT'
+        'value2': 'DPAD_LEFT',
     },
     7: {
         'value': 'right arrow',
-        'value2': 'DPAD_RIGHT'
+        'value2': 'DPAD_RIGHT',
     },
     8: {
         'value': 'z',
-        'value2': 'BUTTON_1'
+        'value2': 'BUTTON_1',
     },
     9: {
         'value': 'a',
-        'value2': 'BUTTON_3'
+        'value2': 'BUTTON_3',
     },
     10: {
         'value': 'q',
-        'value2': 'LEFT_TOP_SHOULDER'
+        'value2': 'LEFT_TOP_SHOULDER',
     },
     11: {
         'value': 'e',
-        'value2': 'RIGHT_TOP_SHOULDER'
+        'value2': 'RIGHT_TOP_SHOULDER',
     },
     12: {
         'value': 'tab',
-        'value2': 'LEFT_BOTTOM_SHOULDER'
+        'value2': 'LEFT_BOTTOM_SHOULDER',
     },
     13: {
         'value': 'r',
-        'value2': 'RIGHT_BOTTOM_SHOULDER'
+        'value2': 'RIGHT_BOTTOM_SHOULDER',
     },
   },
   1: {
     0: {
       'value': 'space',
-      'value2': 'BUTTON_2'
+      'value2': 'BUTTON_2',
     },
     1: {
       'value': 's',
-      'value2': 'BUTTON_4'
+      'value2': 'BUTTON_4',
     },
     2: {
       'value': 'v',
-      'value2': 'SELECT'
+      'value2': 'SELECT',
     },
     3: {
       'value': 'enter',
-      'value2': 'START'
+      'value2': 'START',
     },
     4: {
       'value': 'up arrow',
-      'value2': 'DPAD_UP'
+      'value2': 'DPAD_UP',
     },
     5: {
       'value': 'down arrow',
-      'value2': 'DPAD_DOWN'
+      'value2': 'DPAD_DOWN',
     },
     6: {
       'value': 'left arrow',
-      'value2': 'DPAD_LEFT'
+      'value2': 'DPAD_LEFT',
     },
     7: {
       'value': 'right arrow',
-      'value2': 'DPAD_RIGHT'
+      'value2': 'DPAD_RIGHT',
     },
     8: {
       'value': 'z',
-      'value2': 'BUTTON_1'
+      'value2': 'BUTTON_1',
     },
     9: {
       'value': 'a',
-      'value2': 'BUTTON_3'
+      'value2': 'BUTTON_3',
     },
     10: {
       'value': 'q',
-      'value2': 'LEFT_TOP_SHOULDER'
+      'value2': 'LEFT_TOP_SHOULDER',
     },
     11: {
       'value': 'e',
-      'value2': 'RIGHT_TOP_SHOULDER'
+      'value2': 'RIGHT_TOP_SHOULDER',
     },
     12: {
       'value': 'tab',
-      'value2': 'LEFT_BOTTOM_SHOULDER'
+      'value2': 'LEFT_BOTTOM_SHOULDER',
     },
     13: {
       'value': 'r',
-      'value2': 'RIGHT_BOTTOM_SHOULDER'
+      'value2': 'RIGHT_BOTTOM_SHOULDER',
     },
   },
   2: {},
-  3: {}
+  3: {},
 };
 
 export const DEFAULT_OPTIONS = {
@@ -160,5 +160,5 @@ export const DEFAULT_BUTTONS = {
     quickLoad: false,
     screenshot: false,
     cacheManager: false,
-    exitEmulation: true
+    exitEmulation: true,
 };
