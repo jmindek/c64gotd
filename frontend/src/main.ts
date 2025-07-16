@@ -2,6 +2,14 @@ import { App } from './app';
 
 // Initialize the application when the DOM is fully loaded
 document.addEventListener('DOMContentLoaded', () => {
+  // Hide start button on click
+  const startButton = document.getElementById('startButton');
+  const startButtonWrapper = document.getElementById('startButtonWrapper');
+  if (startButton && startButtonWrapper) {
+    startButton.addEventListener('click', () => {
+      startButtonWrapper.classList.add('hidden');
+    });
+  }
   void (async () => {
     try {
       console.log('Initializing C64 Game of the Day app...');
