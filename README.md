@@ -1,6 +1,14 @@
 # C64 Game of the Day
 
-A web application that lets you play a different Commodore 64 game every day.
+A web application that selects a different Commodore 64 game every day allowing users to play it in their browser and rate it.
+
+## Screenshots
+
+<p align="center">
+  <img src="c64gotd-start-game.png" alt="Start Game" width="45%" style="display:inline-block; margin-right:10px;" />
+  <img src="c64gotd-gameplay.png" alt="Gameplay" width="45%" style="display:inline-block;" />
+</p>
+
 
 ## Deployment Overview
 
@@ -12,8 +20,8 @@ A web application that lets you play a different Commodore 64 game every day.
 ## Features
 
 - Play C64 games directly in your browser
-- Responsive design that works on desktop and mobile (mobile to be verified)
-- Touch controls with virtual joystick (to be verified)
+- Responsive design that works on desktop and mobile
+- Touch controls with virtual joystick (to be fixed)
 - Keyboard support for desktop users
 - Clean, modern UI with dark theme
 
