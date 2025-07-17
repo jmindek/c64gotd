@@ -3,7 +3,7 @@
 A web application that selects a different Commodore 64 game every day allowing users to play it in their browser and rate it.
 
 
-[![Gameplay demo](c64gotd-start-game.png)](https://github.com/jmindek/c64gotd/blob/294816dd2f259df8feb31e1494ffcc06b93de9ac/c64gotd-v1-example.mp4)
+[![Gameplay demo](c64gotd-start-game.png)](https://raw.githubusercontent.com/jmindek/c64gotd/main/c64gotd-v1-example.mp4)
 
 ## Usage
 
