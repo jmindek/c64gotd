@@ -2,15 +2,8 @@
 
 A web application that selects a different Commodore 64 game every day allowing users to play it in their browser and rate it.
 
-## Demo Video
 
-<p align="center">
-  <video controls width="90%" style="max-width:700px; border-radius:10px; box-shadow:0 2px 16px #000a;">
-    <source src="c64gotd-v1-example.mp4" type="video/mp4">
-    <img src="c64gotd-gameplay.png" alt="Gameplay screenshot" style="width:100%; max-width:700px; border-radius:10px; box-shadow:0 2px 16px #000a;" />
-    Your browser does not support the video tag.
-  </video>
-</p>
+[![Gameplay demo](c64gotd-start-game.png)](https://github.com/jmindek/c64gotd/blob/294816dd2f259df8feb31e1494ffcc06b93de9ac/c64gotd-v1-example.mp4)
 
 ## Usage
 
