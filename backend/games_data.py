@@ -12,17 +12,6 @@ GAMES_DATA = [
     },
     {
         "id": "2",
-        "name": "Legacy of the Lost Spell",
-        "d64Path": "/games/Legacy of the Lost Spell Preview + [BLZ].d64",
-        "thumbnailPath": "/games/thumbnails/Legacy of the Lost Spell.png",
-        "description": "A preview of an upcoming C64 RPG adventure game with magic and exploration.",
-        "year": 2025,
-        "publisher": "Blazon",
-        "genre": "RPG",
-        "players": "1",
-    },
-    {
-        "id": "3",
         "name": "Luna",
         "d64Path": "/games/Luna.d64",
         "thumbnailPath": "/games/thumbnails/Luna.png",
@@ -33,7 +22,7 @@ GAMES_DATA = [
         "players": "1",
     },
     {
-        "id": "4",
+        "id": "3",
         "name": "Showdown",
         "d64Path": "/games/showdown.d64",
         "thumbnailPath": "/games/thumbnails/Showdown.png",

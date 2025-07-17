@@ -23,6 +23,7 @@ declare global {
     EJS_startOnLoaded?: boolean;
     EJS_useWebGL?: boolean;
     EJS_volume?: number;
+    EJS_defaultOptions?: Record<string, string>;
     EJS_onLoadError?: (error: Error) => void;
     EJS_ready?: () => void;
     EJS_onStart?: () => void;

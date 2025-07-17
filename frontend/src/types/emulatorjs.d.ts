@@ -26,6 +26,13 @@ interface Window {
       description: string;
     }>;
   EJS_startOnLoaded?: boolean;
+  EJS_defaultControls?: Record<string, Record<string, {
+      value: string;
+      value2: string;
+    }>>;
+  EJS_defaultOptions?: Record<string, string>;
+  EJS_Buttons?: any; // Add this line for EmulatorJS default buttons
+
   EJS_emulator?: import('./emulator-shared').EmulatorInstance;
   EJS?: new (elementId: string, options: any) => any;
   EJS_coreModule?: any;

@@ -91,7 +91,7 @@ export class App {
     try {
       // Use signed S3 URL if available
       
-      const gameUrl = this.currentGame.d64Url || getGameUrl(this.currentGame.d64Path);
+      const gameUrl = getGameUrl(this.currentGame.d64Path);
       
       await GameManager.initializeEmulator(gameUrl);
     } catch (error) {

@@ -20,12 +20,18 @@ body {
     color: var(--text);
     line-height: 1.6;
     padding: 20px;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
 }
 
 .container {
     max-width: 1000px;
     margin: 0 auto;
     padding: 20px;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
 }
 
 /* Header */
@@ -42,16 +48,56 @@ h1 {
     letter-spacing: 2px;
 }
 
-/* Game container */
+/* Game container - responsive height */
 .game-container {
     position: relative;
     width: 100%;
-    aspect-ratio: 4/3;
+    max-width: 800px;
+    margin: 0 auto 2rem;
     background-color: #000;
     border: 2px solid var(--border);
     border-radius: 8px;
     overflow: hidden;
-    margin-bottom: 2rem;
+}
+
+.start-button-wrapper {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0,0,0,0.65);
+    z-index: 10;
+    pointer-events: auto;
+}
+
+/* Ensure .start-button-wrapper only overlays the emulator area */
+#emulator-container {
+    min-height: 400px;
+    height: min(60vh, calc(100vw * 3 / 4));
+    max-height: 600px;
+    position: relative;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.start-button {
+    margin: 0;
+    transform: none;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+}
+
+.start-button-wrapper.hidden {
+    display: none;
+}
+    /* Use viewport height constraint */
+    height: min(60vh, calc(100vw * 3 / 4));
+    max-height: 600px;
 }
 
 .emulator-container {
@@ -72,10 +118,11 @@ h1 {
     margin-bottom: 2rem;
 }
 
-/* Game info */
+/* Game info - ensure it's always visible */
 .game-info {
     text-align: center;
     margin-top: 2rem;
+    flex-shrink: 0;
 }
 
 .game-info h2 {
@@ -185,6 +232,34 @@ h1 {
     }
     
     .game-overlay h2 {
+        font-size: 1.5rem;
+    }
+    
+    .game-container {
+        height: min(50vh, calc(100vw * 3 / 4));
+        max-height: 400px;
+    }
+    
+    body {
+        padding: 10px;
+    }
+    
+    .container {
+        padding: 10px;
+    }
+}
+
+@media (max-width: 480px) {
+    .game-container {
+        height: min(40vh, calc(100vw * 3 / 4));
+        max-height: 300px;
+    }
+    
+    .game-controls {
+        font-size: 0.8rem;
+    }
+    
+    .star-rating {
         font-size: 1.5rem;
     }
 }

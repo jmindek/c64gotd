@@ -14,6 +14,12 @@ declare global {
     EJS_ready?: () => void;
     EJS_onGameStart?: () => void;
     EJS_onLoadError?: (error: Error) => void;
+    EJS_defaultControls?: Record<number, Record<number, {
+      value: string;
+      value2: string;
+    }>>;
+    EJS_defaultOptions?: Record<string, string>;
+    EJS_DEBUG_XX?: boolean;
     gc?: () => void;
   }
 }

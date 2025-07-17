@@ -1,6 +1,24 @@
 # C64 Game of the Day
 
-A web application that lets you play a different Commodore 64 game every day.
+A web application that selects a different Commodore 64 game every day allowing users to play it in their browser and rate it.
+
+## Demo Video
+
+<p align="center">
+  <video controls width="90%" style="max-width:700px; border-radius:10px; box-shadow:0 2px 16px #000a;">
+    <source src="c64gotd-v1-example.mp4" type="video/mp4">
+    <img src="c64gotd-gameplay.png" alt="Gameplay screenshot" style="width:100%; max-width:700px; border-radius:10px; box-shadow:0 2px 16px #000a;" />
+    Your browser does not support the video tag.
+  </video>
+</p>
+
+## Usage
+
+- Ensure hardware acceleration is enabled in your browser
+- Browse to http://localhost:3000
+- Click "START GAME" to start the game
+- Rate the game
+
 
 ## Deployment Overview
 
@@ -12,8 +30,8 @@ A web application that lets you play a different Commodore 64 game every day.
 ## Features
 
 - Play C64 games directly in your browser
-- Responsive design that works on desktop and mobile (mobile to be verified)
-- Touch controls with virtual joystick (to be verified)
+- Responsive design that works on desktop and mobile
+- Touch controls with virtual joystick (to be fixed)
 - Keyboard support for desktop users
 - Clean, modern UI with dark theme
 
@@ -29,8 +47,13 @@ A web application that lets you play a different Commodore 64 game every day.
 
 ### 2. Add game ROMs
 
-- **Local development:** Place ROMs in the `games/` directory at the project root. These will be uploaded to the local S3 bucket in LocalStack on startup.
-- **Production:** Upload ROMs to your configured AWS S3 bucket as required by your deployment.
+- **Local development:** 
+ - Place ROMs in the `games/` directory at the project root. 
+    - These will be uploaded to the local S3 bucket in LocalStack on startup.
+ - Add to games_data.py
+ - Delete games.db
+ - Rebuild docker image
+- **Production:** Upload ROMs to your configured AWS S3 bucket as required by your deployment assuming the steps for local development were followed.
 
 ---
 
@@ -104,11 +127,6 @@ docker-compose -f docker-compose.yml -f docker-compose.dev.yml run test-backend
 ```
 
 ---
-
-## Adding Games
-
-1. Place your C64 game ROMs (`.prg`, `.d64`, etc.) in the `public/games` directory.
-2. The game list is managed by the backend. To add or update games, edit `backend/games_data.py` (or update the backend database if using one in production).
 
 ## License
 
