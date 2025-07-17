@@ -6,7 +6,7 @@ A web application that selects a different Commodore 64 game every day allowing 
 
 <p align="center">
   <video controls width="90%" style="max-width:700px; border-radius:10px; box-shadow:0 2px 16px #000a;">
-    <source src="c64gotd-v1-example.mp4" type="video/mp4">
+    <source src="https://github.com/user-attachments/assets/66739b41-3443-478d-99c6-e8fb352c5182" type="video/mp4">
     <img src="c64gotd-gameplay.png" alt="Gameplay screenshot" style="width:100%; max-width:700px; border-radius:10px; box-shadow:0 2px 16px #000a;" />
     Your browser does not support the video tag.
   </video>
